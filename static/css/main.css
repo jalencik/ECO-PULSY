@@ -349,3 +349,36 @@ svg { vertical-align: -0.15em; }
 }
 .ts-dropdown .active { background: var(--brand-soft); color: var(--brand-dark); }
 @media (max-width: 960px) { .picker { width: 100%; max-width: none; } }
+
+/* --- v5 additions: location button, avatar photo, owner controls -------- */
+.loc-btn {
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--card); color: var(--brand); cursor: pointer; transition: background 0.15s;
+}
+.loc-btn:hover { background: var(--brand-soft); }
+.loc-btn.loading { opacity: 0.5; pointer-events: none; }
+.avatar-img { background-size: cover; background-position: center; color: transparent; }
+
+.row-actions { display: flex; gap: 6px; align-items: center; }
+.row-actions form { margin: 0; }
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border: 1px solid var(--line); border-radius: 7px;
+  background: var(--card); color: var(--muted); cursor: pointer; text-decoration: none;
+}
+.icon-btn:hover { background: var(--bg); color: var(--ink); text-decoration: none; }
+.icon-btn-danger:hover { background: #fdf1f0; color: #c0392b; border-color: #eecac6; }
+
+/* form controls inside plain cards (edit user page) */
+.card form label { display: block; font-weight: 600; font-size: 13px; margin: 14px 0 6px; }
+.card form input[type="text"], .card form input[type="email"], .card form select {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
+  font: 400 15px "Public Sans", sans-serif; background: #fbfcfc;
+}
+.card form input:focus, .card form select:focus { outline: 2px solid var(--brand); border-color: var(--brand); }
+.form-row { display: flex; gap: 10px; margin-top: 18px; }
+.auth-card input[type="date"], .auth-card input[type="file"] {
+  width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px;
+  font: 400 14px "Public Sans", sans-serif; background: #fbfcfc;
+}

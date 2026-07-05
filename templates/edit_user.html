@@ -1,0 +1,27 @@
+{% extends "app_base.html" %}
+{% block title %}Edit {{ user.name }} — EcoPulse{% endblock %}
+{% block page_title %}Edit user{% endblock %}
+{% block page_sub %}Owner controls · {{ user.email }}{% endblock %}
+
+{% block main %}
+<section class="card" style="max-width:520px">
+  {% include "_flash.html" %}
+  <form method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <label for="name">Name</label>
+    <input id="name" name="name" type="text" value="{{ user.name }}" required>
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" value="{{ user.email }}" required>
+    <label for="role">Role</label>
+    <select id="role" name="role">
+      <option value="user"  {{ 'selected' if user.role == 'user' }}>Member</option>
+      <option value="admin" {{ 'selected' if user.role == 'admin' }}>Administrator</option>
+      <option value="owner" {{ 'selected' if user.role == 'owner' }}>Owner</option>
+    </select>
+    <div class="form-row">
+      <button class="btn btn-primary" type="submit">Save changes</button>
+      <a class="btn btn-ghost" href="{{ url_for('admin.panel') }}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

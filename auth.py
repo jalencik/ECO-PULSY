@@ -1,8 +1,10 @@
 """Authentication routes: register, login, logout."""
+import base64
 import re
 import time
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import (Blueprint, current_app, flash, redirect, render_template,
+                   request, url_for)
 from flask_login import current_user, login_required, login_user, logout_user
 
 from extensions import db
@@ -39,6 +41,23 @@ def _clear_failures(email: str) -> None:
     _failed_logins.pop(email, None)
 
 
+ALLOWED_PHOTO_TYPES = {"image/png", "image/jpeg", "image/webp", "image/gif"}
+
+
+def _read_photo(file_storage):
+    """Turn an uploaded image into a base64 data URI, or return (None, error)."""
+    if not file_storage or not file_storage.filename:
+        return None, None
+    data = file_storage.read()
+    if len(data) > current_app.config["MAX_PHOTO_BYTES"]:
+        return None, "Profile photo must be under 800 KB."
+    mimetype = file_storage.mimetype or "image/png"
+    if mimetype not in ALLOWED_PHOTO_TYPES:
+        return None, "Photo must be a PNG, JPG, WEBP or GIF image."
+    encoded = base64.b64encode(data).decode("ascii")
+    return f"data:{mimetype};base64,{encoded}", None
+
+
 def _validate_registration(name, email, password):
     """Return a list of human-readable problems (empty list = valid)."""
     problems = []
@@ -62,18 +81,25 @@ def register():
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
+        birthdate = request.form.get("birthdate", "").strip() or None
 
         problems = _validate_registration(name, email, password)
+        photo, photo_error = _read_photo(request.files.get("photo"))
+        if photo_error:
+            problems.append(photo_error)
         if problems:
             for problem in problems:
                 flash(problem, "error")
-            return render_template("register.html", name=name, email=email), 400
+            return render_template("register.html", name=name, email=email,
+                                   birthdate=birthdate), 400
 
-        user = User(name=name, email=email)
+        user = User(name=name, email=email, birthdate=birthdate, photo=photo)
         user.set_password(password)
-        # The very first account becomes the administrator; later admins
-        # are promoted with the `flask create-admin` command.
-        if User.query.count() == 0:
+        # The configured owner always registers as owner; otherwise the
+        # very first account becomes an administrator.
+        if email == current_app.config.get("OWNER_EMAIL"):
+            user.role = "owner"
+        elif User.query.count() == 0:
             user.role = "admin"
         db.session.add(user)
         db.session.commit()

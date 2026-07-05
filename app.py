@@ -9,6 +9,7 @@ from pathlib import Path
 
 import click
 from flask import Flask, abort, render_template, request, session
+from sqlalchemy import text
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
@@ -52,6 +53,8 @@ def create_app(config_class=Config):
     # so a fresh Supabase database gets its schema automatically.
     with app.app_context():
         db.create_all()
+        _ensure_user_columns()   # add new profile columns to an existing table
+        _promote_owner(app)      # make OWNER_EMAIL the owner
         try:
             _seed_locations()
         except Exception:
@@ -103,6 +106,52 @@ def _configure_security_headers(app):
         return response
 
 
+# Columns added after the users table already existed in production.
+# db.create_all() never ALTERs existing tables, so we add them by hand,
+# once, ignoring "already exists" errors. Safe on PostgreSQL and SQLite.
+_NEW_USER_COLUMNS = {
+    "birthdate": "VARCHAR(20)",
+    "photo": "TEXT",
+    "latitude": "DOUBLE PRECISION",
+    "longitude": "DOUBLE PRECISION",
+    "location_label": "VARCHAR(80)",
+}
+
+
+def _ensure_user_columns():
+    dialect = db.engine.dialect.name
+    for name, col_type in _NEW_USER_COLUMNS.items():
+        col_type_sql = col_type
+        if dialect == "sqlite" and col_type == "DOUBLE PRECISION":
+            col_type_sql = "FLOAT"
+        try:
+            if dialect == "postgresql":
+                db.session.execute(text(
+                    f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {name} {col_type_sql}"))
+            else:
+                db.session.execute(text(
+                    f"ALTER TABLE users ADD COLUMN {name} {col_type_sql}"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()  # column already present — fine
+
+
+def _promote_owner(app):
+    """Ensure the configured OWNER_EMAIL holds the 'owner' role."""
+    from models import User
+
+    email = app.config.get("OWNER_EMAIL", "")
+    if not email:
+        return
+    try:
+        user = User.query.filter_by(email=email).first()
+        if user is not None and user.role != "owner":
+            user.role = "owner"
+            db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+
 def _seed_locations():
     """Load data/districts.json into the locations table (idempotent).
 
@@ -140,7 +189,8 @@ def _configure_csrf(app):
     def verify_csrf_token():
         if request.method == "POST":
             token = session.get("_csrf_token")
-            if not token or token != request.form.get("_csrf_token"):
+            sent = request.form.get("_csrf_token") or request.headers.get("X-CSRFToken")
+            if not token or token != sent:
                 abort(400, description="Invalid or missing CSRF token.")
 
     def csrf_token():

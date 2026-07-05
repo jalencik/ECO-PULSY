@@ -37,7 +37,7 @@
 </section>
 
 <section class="card">
-  <h2 class="card-title">7-day forecast</h2>
+  <h2 class="card-title">{{ data.daily|length }}-day forecast</h2>
   <div class="week-row">
     {% for d in data.daily %}
     <div class="day-cell">

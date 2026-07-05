@@ -1,8 +1,11 @@
-<div class="picker" data-picker>
+<div class="picker" data-picker data-csrf="{{ csrf_token() }}">
   <select data-picker-region aria-label="Search region">
     <option value="">Region…</option>
   </select>
   <select data-picker-district aria-label="Search district" disabled>
     <option value="">District…</option>
   </select>
+  <button type="button" class="loc-btn" data-my-location title="Use my current location">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+  </button>
 </div>

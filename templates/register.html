@@ -8,7 +8,7 @@
     <h1>Create your account</h1>
     <p class="auth-sub">Free access to air quality across Uzbekistan.</p>
     {% include "_flash.html" %}
-    <form method="post" novalidate>
+    <form method="post" enctype="multipart/form-data" novalidate>
       <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
       <label for="name">Full name</label>
       <input id="name" name="name" type="text" value="{{ name or '' }}" required autofocus>
@@ -16,6 +16,10 @@
       <input id="email" name="email" type="email" value="{{ email or '' }}" required>
       <label for="password">Password <span class="hint">(at least 8 characters)</span></label>
       <input id="password" name="password" type="password" minlength="8" required>
+      <label for="birthdate">Date of birth <span class="hint">(recommended)</span></label>
+      <input id="birthdate" name="birthdate" type="date" value="{{ birthdate or '' }}">
+      <label for="photo">Profile photo <span class="hint">(optional)</span></label>
+      <input id="photo" name="photo" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
       <button class="btn btn-primary btn-block" type="submit">Create account</button>
     </form>
     <p class="auth-alt">Already registered? <a href="{{ url_for('auth.login') }}">Sign in</a></p>

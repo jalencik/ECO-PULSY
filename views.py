@@ -1,12 +1,15 @@
 """Public pages, the dashboard, region and district pages, and the
 small JSON API that powers the cascading location picker."""
-from flask import Blueprint, abort, jsonify, redirect, render_template, url_for
+import math
+
+from flask import (Blueprint, abort, jsonify, redirect, render_template,
+                   request, url_for)
 from flask_login import current_user, login_required
 
 from extensions import db
 from models import Location
 from services import openmeteo
-from services.regions import get_region, slug_for_dataset_key
+from services.regions import REGIONS, get_region, slug_for_dataset_key
 
 views_bp = Blueprint("views", __name__)
 
@@ -79,6 +82,39 @@ def location(location_id):
 # ---------------------------------------------------------------------------
 # JSON API for the cascading searchable dropdowns
 # ---------------------------------------------------------------------------
+
+@views_bp.route("/api/my-location", methods=["POST"])
+@login_required
+def api_my_location():
+    """Store the browser's geolocation on the user and return the nearest
+    region so the picker can jump straight to local conditions."""
+    data = request.get_json(silent=True) or {}
+    try:
+        lat = float(data["latitude"])
+        lon = float(data["longitude"])
+    except (KeyError, TypeError, ValueError):
+        return jsonify({"error": "invalid coordinates"}), 400
+    if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        return jsonify({"error": "out of range"}), 400
+
+    nearest = min(REGIONS, key=lambda r: _haversine(lat, lon, r["lat"], r["lon"]))
+    current_user.latitude = lat
+    current_user.longitude = lon
+    current_user.location_label = nearest["name"]
+    db.session.commit()
+    return jsonify({"region": nearest["name"],
+                    "redirect": url_for("views.region", slug=nearest["slug"])})
+
+
+def _haversine(lat1, lon1, lat2, lon2):
+    """Great-circle distance in km between two points."""
+    r = 6371
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp = math.radians(lat2 - lat1)
+    dl = math.radians(lon2 - lon1)
+    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 2 * r * math.asin(math.sqrt(a))
+
 
 @views_bp.route("/api/regions")
 @login_required

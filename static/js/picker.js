@@ -49,4 +49,38 @@
   district.on("change", (id) => {
     if (id) window.location.href = "/locations/" + id;
   });
+
+  // "Use my current location" — asks the browser, stores it, jumps to the
+  // nearest region.
+  const locBtn = wrap.querySelector("[data-my-location]");
+  if (locBtn && navigator.geolocation) {
+    locBtn.addEventListener("click", () => {
+      locBtn.classList.add("loading");
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          fetch("/api/my-location", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": wrap.getAttribute("data-csrf") || "",
+            },
+            body: JSON.stringify({
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+            }),
+          })
+            .then((r) => r.json())
+            .then((d) => {
+              if (d.redirect) window.location.href = d.redirect;
+              else locBtn.classList.remove("loading");
+            })
+            .catch(() => locBtn.classList.remove("loading"));
+        },
+        () => {
+          locBtn.classList.remove("loading");
+          alert("Could not get your location. Please allow location access.");
+        }
+      );
+    });
+  }
 })();

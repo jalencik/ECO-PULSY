@@ -1,67 +1,67 @@
-# Update v4 — Rate-limit resilience, stale-serving & snapshot persistence
+# Update v5 — WeatherAPI fix + Owner rank + profiles
 
-This update eliminates the **"Live data is temporarily unavailable"** banner
-as a normal occurrence. It attacks the real root causes of that message on
-Render's free tier, not just the symptom.
+## Step 1 — get your free WeatherAPI key (2 min, no card)
 
-## Why the banner appeared
+1. Go to https://www.weatherapi.com/signup.aspx and sign up (free).
+2. On your dashboard, copy the **API Key**.
+3. You'll paste it into Render in step 3. That's the only manual value.
 
-1. **No retry.** A single Open-Meteo `429` (rate limit) became an error
-   instantly. Render's free tier shares outbound IPs across many apps, and
-   Open-Meteo throttles per IP, so 429s happen even when your app is polite.
-2. **Last good data was thrown away.** Any failed refresh returned an error
-   payload — even though perfectly good data had loaded minutes earlier.
-3. **The cache is wiped on every restart.** `SimpleCache` lives only in one
-   worker's memory. Render cold-starts constantly, so after each restart the
-   app had nothing to show until the next successful refresh.
-4. **The warm-up burst was ~16 rapid calls** (14 regions fetched one by one),
-   the exact pattern that trips a shared-IP rate limit.
+## Step 2 — push the code (VS Code -> Terminal -> New Terminal)
 
-## What changed
+```
+git add .
+```
+```
+git commit -m "v5: WeatherAPI provider, owner rank, profile fields, geolocation"
+```
+```
+git push origin main
+```
+(If push is rejected: `git pull --no-edit -X ours` then `git push origin main`.)
 
-| File | Change |
+## Step 3 — set two environment variables on Render
+
+Render -> your service -> **Environment** -> add:
+
+| Key | Value |
 |---|---|
-| `services/openmeteo.py` | Retry with backoff honoring `Retry-After`; serve last-good (`stale`) data on failure; batched 14-region warm-up (2 calls, not 28) |
-| `services/snapshots.py` | **New.** Saves/loads the last good payload to the database |
-| `models.py` | **New** `Snapshot` table (auto-created on boot; no manual migration) |
-| `templates/dashboard.html`, `region.html`, `location.html` | Gentle "refresh delayed" notice when showing cached data |
-| `test_resilience.py` | **New.** 14 simulated-failure tests, all passing |
+| `WEATHERAPI_KEY` | the key from step 1 |
+| `OWNER_EMAIL` | jaloliddin2009applicant@gmail.com |
 
-No existing table changed. No data is touched.
+Then **Manual Deploy -> Deploy latest commit**. After it boots, open
+`/admin/diagnostics` — the WeatherAPI row should read **OK 200**, and the
+dashboard fills with live data within a minute.
 
-## The four defensive layers
+## What changed and why
 
-1. **Retry on 429/5xx/timeout** — up to 3 attempts, honoring the API's
-   `Retry-After` header (capped so a user never waits long).
-2. **Serve last-known-good data** — if a refresh still fails, the previous
-   good payload is shown with a small "refresh delayed" note instead of the
-   red error. The red banner can now appear **only** on a page that has
-   *never once* loaded successfully.
-3. **Snapshot persistence to Postgres/Supabase** — every good payload is
-   saved to a `snapshots` table, so a cold start or restart restores real
-   data instantly, and all workers share it.
-4. **Batched warm-up** — all 14 regions are refreshed in 2 requests, keeping
-   you far under the rate limit.
+**The actual bug (proven by your diagnostics page):** only Open-Meteo's
+*weather* endpoint was returning 429 "Daily API request limit exceeded"
+— its air-quality endpoint was fine. The cause is Render's free tier
+sharing outbound IPs with thousands of apps that collectively exhaust
+Open-Meteo's per-IP free quota.
 
-## Honest limitation
+**The fix:** weather now comes from **WeatherAPI.com** using YOUR personal
+key (1,000,000 calls/month free). A personal key is tied to your account,
+not the shared IP, so this rate-limit can't happen again. One WeatherAPI
+call returns weather + air quality + forecast together, so the app is
+simpler and no longer depends on Open-Meteo at all. Forecast shows 3 days
+(WeatherAPI free tier); the heading adjusts automatically.
 
-No free-tier stack can promise literally zero errors. What this guarantees is
-that users never see a **blank or broken** page: worst case they see slightly
-older readings with a polite notice, and the app self-heals on the next
-successful refresh.
+**New: Owner vs Admin ranks.**
+- The `OWNER_EMAIL` account is automatically promoted to **Owner**.
+- The Owner sees the *real* number of admins and the full user table,
+  and can **edit** any user's name/email/role or **delete** a user (pencil
+  and trash icons in the table).
+- Plain Admins see the admin count as **2** and no management table, exactly
+  as you asked.
 
-## Deploy
+**New: richer sign-up.**
+- Optional **Date of birth** field, labelled "(recommended)".
+- Optional **profile photo** upload — stored in the database and shown as
+  the sidebar avatar.
+- **"Use my current location"** button (pin icon by the search boxes): asks
+  the browser for GPS, saves the coordinates to the user's record, and jumps
+  to their nearest region.
 
-Your data lives in Supabase; Render only runs code. `db.create_all()` only
-*adds* the new `snapshots` table — it never drops or empties anything.
-
-1. Merge/push this branch to `main` on GitHub.
-2. Render auto-deploys (or Manual Deploy → Deploy latest commit).
-3. Watch the logs for `Booting worker`, then open the site.
-
-## Verify
-
-- `venv/Scripts/python.exe test_resilience.py` → `14 passed, 0 failed`.
-- In Supabase → Table Editor you'll see a new `snapshots` table filling with
-  one row per region shortly after boot.
-- `users` (30) and `locations` (173) are untouched.
+**Passwords:** stored ONLY as irreversible salted hashes, as before. This
+is deliberate and protects your users — see the chat for the full reason.

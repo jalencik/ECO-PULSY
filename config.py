@@ -37,6 +37,16 @@ class Config:
     CACHE_TYPE = "SimpleCache"
     CACHE_DEFAULT_TIMEOUT = 2400
     CACHE_TTL_SECONDS = int(os.environ.get("CACHE_TTL_SECONDS", 2400))
+
+    # WeatherAPI.com key (weather + air quality). Set in Render -> Environment.
+    WEATHERAPI_KEY = os.environ.get("WEATHERAPI_KEY", "")
+
+    # The single account that outranks admins. On boot this user is
+    # promoted to the "owner" role automatically.
+    OWNER_EMAIL = os.environ.get("OWNER_EMAIL", "jaloliddin2009applicant@gmail.com").lower()
+
+    # Max uploaded profile photo size (bytes) before rejecting.
+    MAX_PHOTO_BYTES = int(os.environ.get("MAX_PHOTO_BYTES", 800_000))
     PREFETCH_MINUTES = int(os.environ.get("PREFETCH_MINUTES", 30))
     SCHEDULER_API_ENABLED = False
 
