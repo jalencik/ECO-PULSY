@@ -1,0 +1,66 @@
+<div class="detail-grid">
+  <section class="card current-card">
+    <h2 class="card-title">Current weather</h2>
+    <div class="current-main">
+      <span class="w-icon-lg"><svg width="52" height="52"><use href="#i-{{ data.current.icon }}"/></svg></span>
+      <span class="temp-lg">{{ data.current.temp | round | int if data.current.temp is not none else '–' }}°C</span>
+      <div>
+        <p class="current-label">{{ data.current.weather_label }}</p>
+        <p class="muted">Feels like {{ data.current.feels_like | round | int if data.current.feels_like is not none else '–' }}°</p>
+      </div>
+    </div>
+    <dl class="detail-list">
+      <div><dt><svg width="14" height="14"><use href="#i-wind"/></svg> Wind</dt><dd>{{ data.current.wind }} km/h</dd></div>
+      <div><dt><svg width="14" height="14"><use href="#i-drop"/></svg> Humidity</dt><dd>{{ data.current.humidity }}%</dd></div>
+      <div><dt><svg width="14" height="14"><use href="#i-gauge"/></svg> Pressure</dt><dd>{{ data.current.pressure }} hPa</dd></div>
+    </dl>
+  </section>
+
+  <section class="card aqi-card">
+    <h2 class="card-title">Air quality index</h2>
+    {% if data.aqi %}
+    <div class="aqi-main">
+      <span class="aqi-value {{ data.aqi.css }}-text">{{ data.aqi.value }}</span>
+      <span class="chip chip-lg {{ data.aqi.css }}">{{ data.aqi.label }}</span>
+    </div>
+    <p class="aqi-advice">{{ data.aqi.advice }}</p>
+    <p class="muted small">US EPA index, computed from PM2.5</p>
+    {% else %}
+    <p class="muted">AQI unavailable.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="card">
+  <h2 class="card-title">Next 48 hours — temperature and PM2.5</h2>
+  <div class="chart-wrap"><canvas id="trend-chart"></canvas></div>
+</section>
+
+<section class="card">
+  <h2 class="card-title">7-day forecast</h2>
+  <div class="week-row">
+    {% for d in data.daily %}
+    <div class="day-cell">
+      <span class="day-name">{{ d.weekday }}</span>
+      <svg width="24" height="24"><use href="#i-{{ d.icon }}"/></svg>
+      <span class="day-temps">{{ d.tmax | round | int }}° <small>{{ d.tmin | round | int }}°</small></span>
+      {% if d.rain_prob is not none %}<span class="muted small">{{ d.rain_prob }}%</span>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="card">
+  <h2 class="card-title">Pollutant breakdown</h2>
+  <table class="table">
+    <thead><tr><th>Pollutant</th><th>Concentration</th><th>Unit</th></tr></thead>
+    <tbody>
+      {% for name, value, unit in data.pollutants %}
+      <tr><td>{{ name }}</td><td>{{ value if value is not none else '–' }}</td><td>{{ unit }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<script type="application/json" id="chart-data">{{ data.chart | tojson }}</script>
+<script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>

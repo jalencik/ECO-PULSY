@@ -1,0 +1,57 @@
+{% extends "app_base.html" %}
+{% block title %}Dashboard — EcoPulse{% endblock %}
+{% block page_title %}National overview{% endblock %}
+{% block page_sub %}Current air quality and weather across all 14 regions of Uzbekistan{% endblock %}
+
+{% block main %}
+{% if overview.demo %}
+  <div class="banner banner-info">Demo data mode is on (DEMO_DATA=1). Values shown are synthetic samples, not live measurements.</div>
+{% endif %}
+{% if overview.error %}
+  <div class="banner banner-error">Live data is temporarily unavailable. Please refresh in a moment.</div>
+{% else %}
+
+{% if summary %}
+<div class="stat-row">
+  <div class="stat-card">
+    <span class="stat-label">National average PM2.5</span>
+    <span class="stat-value">{{ summary.avg_pm25 }} <small>µg/m³</small></span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Cleanest air right now</span>
+    <span class="stat-value">{{ summary.cleanest.name }}</span>
+    <span class="chip {{ summary.cleanest.aqi.css }}">AQI {{ summary.cleanest.aqi.value }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Most polluted right now</span>
+    <span class="stat-value">{{ summary.worst.name }}</span>
+    <span class="chip {{ summary.worst.aqi.css }}">AQI {{ summary.worst.aqi.value }}</span>
+  </div>
+</div>
+{% endif %}
+
+<div class="region-grid">
+  {% for r in overview.regions %}
+  <a class="region-card" href="{{ url_for('views.region', slug=r.slug) }}">
+    <div class="region-card-head">
+      <div>
+        <h3>{{ r.name }}</h3>
+        <p class="muted">{{ r.capital }}</p>
+      </div>
+      {% if r.aqi %}<span class="chip {{ r.aqi.css }}">AQI {{ r.aqi.value }}</span>{% endif %}
+    </div>
+    <div class="region-card-body">
+      <span class="w-icon"><svg width="26" height="26"><use href="#i-{{ r.icon }}"/></svg></span>
+      <span class="temp">{{ r.temp | round | int if r.temp is not none else '–' }}°</span>
+      <span class="muted">{{ r.weather_label }}</span>
+    </div>
+    <div class="region-card-foot">
+      <span><svg width="13" height="13"><use href="#i-gauge"/></svg> PM2.5 {{ r.pm25 if r.pm25 is not none else '–' }}</span>
+      <span><svg width="13" height="13"><use href="#i-wind"/></svg> {{ r.wind if r.wind is not none else '–' }} km/h</span>
+      <span><svg width="13" height="13"><use href="#i-drop"/></svg> {{ r.humidity if r.humidity is not none else '–' }}%</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

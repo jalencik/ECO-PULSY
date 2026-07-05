@@ -1,0 +1,22 @@
+{% extends "app_base.html" %}
+{% block title %}{{ loc.district_name }} — EcoPulse{% endblock %}
+{% block page_title %}{{ loc.district_name }}{% endblock %}
+{% block page_sub %}{{ loc.region_name }} · {{ loc.latitude }}, {{ loc.longitude }}{% endblock %}
+
+{% block page_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block main %}
+{% if data.demo %}
+  <div class="banner banner-info">Demo data mode is on (DEMO_DATA=1). Values shown are synthetic samples, not live measurements.</div>
+{% endif %}
+{% if fallback and region %}
+  <div class="banner banner-info">Point data for this district is temporarily unavailable — showing the regional centre ({{ region.capital }}) instead.</div>
+{% endif %}
+{% if data.error %}
+  <div class="banner banner-error">Live data is temporarily unavailable for this district. Please refresh in a moment.</div>
+{% else %}
+{% include "_detail_body.html" %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "app_base.html" %}
+{% block title %}Admin panel — EcoPulse{% endblock %}
+{% block page_title %}Admin panel{% endblock %}
+{% block page_sub %}Registered accounts and platform roles{% endblock %}
+
+{% block main %}
+<div class="stat-row stat-row-2">
+  <div class="stat-card">
+    <span class="stat-icon"><svg width="20" height="20"><use href="#i-users"/></svg></span>
+    <span class="stat-label">Total users</span>
+    <span class="stat-value">{{ total_users }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon"><svg width="20" height="20"><use href="#i-shield"/></svg></span>
+    <span class="stat-label">Administrators</span>
+    <span class="stat-value">{{ total_admins }}</span>
+  </div>
+</div>
+
+<section class="card">
+  <h2 class="card-title">All users</h2>
+  <table class="table">
+    <thead>
+      <tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th></tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ user.name }}</td>
+        <td>{{ user.email }}</td>
+        <td><span class="role-badge {{ 'role-admin' if user.is_admin else 'role-user' }}">{{ user.role }}</span></td>
+        <td>{{ user.created_at.strftime('%d %b %Y') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

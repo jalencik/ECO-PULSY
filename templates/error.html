@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} — EcoPulse{% endblock %}
+
+{% block body %}
+<main class="auth-page">
+  <div class="auth-card center">
+    <a class="auth-brand" href="{{ url_for('views.index') }}">{% include "_logo.html" %}</a>
+    <h1 class="error-code">{{ code }}</h1>
+    <p class="auth-sub">{{ message }}</p>
+    <a class="btn btn-primary" href="{{ url_for('views.index') }}">Back to home</a>
+  </div>
+</main>
+{% endblock %}
