@@ -1,7 +1,7 @@
 {% extends "app_base.html" %}
 {% block title %}Admin panel — EcoPulse{% endblock %}
 {% block page_title %}Admin panel{% endblock %}
-{% block page_sub %}Registered accounts and platform roles{% endblock %}
+{% block page_sub %}Registered accounts and platform roles · <a href="{{ url_for('admin.diagnostics') }}">Run live diagnostics</a>{% endblock %}
 
 {% block main %}
 <div class="stat-row stat-row-2">
