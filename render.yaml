@@ -1,0 +1,15 @@
+# One-click deployment blueprint for https://render.com (free tier).
+services:
+  - type: web
+    name: eco-pulsy
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: 3.12.6
+      # DATABASE_URL is added manually in the Render dashboard (Supabase
+      # Session pooler URI). Never commit it to the repository.

@@ -1,0 +1,19 @@
+{% extends "app_base.html" %}
+{% block title %}{{ region.name }} — EcoPulse{% endblock %}
+{% block page_title %}{{ region.name }}{% endblock %}
+{% block page_sub %}Measured at {{ region.capital }} · {{ region.lat }}, {{ region.lon }}{% endblock %}
+
+{% block page_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block main %}
+{% if data.demo %}
+  <div class="banner banner-info">Demo data mode is on (DEMO_DATA=1). Values shown are synthetic samples, not live measurements.</div>
+{% endif %}
+{% if data.error %}
+  <div class="banner banner-error">Live data is temporarily unavailable for this region. Please refresh in a moment.</div>
+{% else %}
+{% include "_detail_body.html" %}
+{% endif %}
+{% endblock %}
