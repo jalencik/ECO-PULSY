@@ -1,15 +1,17 @@
 {% extends "app_base.html" %}
 {% block title %}Admin panel — EcoPulse{% endblock %}
-{% block page_title %}Admin panel{% endblock %}
-{% block page_sub %}Registered accounts and platform roles · <a href="{{ url_for('admin.diagnostics') }}">Run live diagnostics</a>{% endblock %}
+{% block page_title %}{{ 'Owner panel' if is_owner else 'Admin panel' }}{% endblock %}
+{% block page_sub %}Platform accounts and roles{% if current_user.is_admin %} · <a href="{{ url_for('admin.diagnostics') }}">Run live diagnostics</a>{% endif %}{% endblock %}
 
 {% block main %}
 <div class="stat-row stat-row-2">
+  {% if is_owner %}
   <div class="stat-card">
     <span class="stat-icon"><svg width="20" height="20"><use href="#i-users"/></svg></span>
     <span class="stat-label">Total users</span>
     <span class="stat-value">{{ total_users }}</span>
   </div>
+  {% endif %}
   <div class="stat-card">
     <span class="stat-icon"><svg width="20" height="20"><use href="#i-shield"/></svg></span>
     <span class="stat-label">Administrators</span>
@@ -17,11 +19,12 @@
   </div>
 </div>
 
+{% if is_owner %}
 <section class="card">
-  <h2 class="card-title">All users</h2>
+  <h2 class="card-title">All users — owner controls</h2>
   <table class="table">
     <thead>
-      <tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th></tr>
+      <tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Manage</th></tr>
     </thead>
     <tbody>
       {% for user in users %}
@@ -29,11 +32,31 @@
         <td>{{ loop.index }}</td>
         <td>{{ user.name }}</td>
         <td>{{ user.email }}</td>
-        <td><span class="role-badge {{ 'role-admin' if user.is_admin else 'role-user' }}">{{ user.role }}</span></td>
+        <td><span class="role-badge {{ 'role-admin' if user.is_admin else 'role-user' }}">{{ user.role_label }}</span></td>
         <td>{{ user.created_at.strftime('%d %b %Y') }}</td>
+        <td class="row-actions">
+          <a class="icon-btn" href="{{ url_for('admin.edit_user', user_id=user.id) }}" title="Edit user">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          </a>
+          {% if user.id != current_user.id %}
+          <form method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}"
+                onsubmit="return confirm('Delete {{ user.name }} permanently?');">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <button class="icon-btn icon-btn-danger" type="submit" title="Delete user">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+            </button>
+          </form>
+          {% endif %}
+        </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 </section>
+{% else %}
+<section class="card">
+  <p class="muted">You are signed in as an administrator. Full account
+  management is available to the platform owner.</p>
+</section>
+{% endif %}
 {% endblock %}

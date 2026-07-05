@@ -40,10 +40,14 @@
 
     <div class="sidebar-foot">
       <div class="user-chip">
+        {% if current_user.photo %}
+        <span class="avatar avatar-img" style="background-image:url('{{ current_user.photo }}')"></span>
+        {% else %}
         <span class="avatar">{{ current_user.name[0] | upper }}</span>
+        {% endif %}
         <span class="user-meta">
           <strong>{{ current_user.name }}</strong>
-          <small>{{ 'Administrator' if current_user.is_admin else 'Member' }}</small>
+          <small>{{ current_user.role_label }}</small>
         </span>
       </div>
       <form action="{{ url_for('auth.logout') }}" method="post">

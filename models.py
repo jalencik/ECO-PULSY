@@ -14,14 +14,30 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(10), nullable=False, default="user")  # "user" | "admin"
+    role = db.Column(db.String(10), nullable=False, default="user")  # user | admin | owner
     created_at = db.Column(
         db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
     )
 
+    # Optional profile details (all nullable so existing rows stay valid).
+    birthdate = db.Column(db.String(20), nullable=True)   # YYYY-MM-DD
+    photo = db.Column(db.Text, nullable=True)             # base64 data URI
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
+    location_label = db.Column(db.String(80), nullable=True)
+
+    @property
+    def is_owner(self) -> bool:
+        return self.role == "owner"
+
     @property
     def is_admin(self) -> bool:
-        return self.role == "admin"
+        # Owners have every admin power too.
+        return self.role in ("admin", "owner")
+
+    @property
+    def role_label(self) -> str:
+        return {"owner": "Owner", "admin": "Administrator"}.get(self.role, "Member")
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
