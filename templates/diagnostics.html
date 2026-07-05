@@ -1,0 +1,39 @@
+{% extends "app_base.html" %}
+{% block title %}Diagnostics — EcoPulse{% endblock %}
+{% block page_title %}Diagnostics{% endblock %}
+{% block page_sub %}Live API health, tested from this server just now{% endblock %}
+
+{% block main %}
+<section class="card">
+  <h2 class="card-title">External API tests (run on page load)</h2>
+  <table class="table">
+    <thead><tr><th>Service</th><th>Result</th><th>Response time</th><th>Detail</th></tr></thead>
+    <tbody>
+      {% for t in tests %}
+      <tr>
+        <td>{{ t.name }}</td>
+        <td>
+          <span class="role-badge {{ 'role-admin' if t.ok else 'role-user' }}"
+                {% if not t.ok %}style="background:#fdf1f0;color:#9c2f23"{% endif %}>
+            {{ 'OK ' ~ t.status if t.ok else t.status }}
+          </span>
+        </td>
+        <td>{{ t.ms }} ms</td>
+        <td style="max-width:480px;word-break:break-all"><code class="small">{{ t.detail }}</code></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="card">
+  <h2 class="card-title">Application state</h2>
+  <table class="table">
+    <tbody>
+      {% for label, value in state.items() %}
+      <tr><td>{{ label }}</td><td><strong>{{ value }}</strong></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
