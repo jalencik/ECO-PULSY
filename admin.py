@@ -39,20 +39,33 @@ def owner_required(view):
 @admin_bp.route("/")
 @admin_required
 def panel():
+    """Owner: real roles + management controls.
+
+    Admins: read-only view — real user total, but the admin count is
+    fixed at 2, every other admin is displayed as a normal Member, and
+    the owner appears as a plain Administrator (rank concealed).
+    """
     users = User.query.order_by(User.created_at.desc()).all()
-    real_admins = sum(1 for u in users if u.role in ("admin", "owner"))
 
     if current_user.is_owner:
-        # The owner sees the truth and can manage everyone.
-        return render_template(
-            "admin.html", is_owner=True, users=users,
-            total_users=len(users), total_admins=real_admins,
-        )
+        rows = [{"user": u, "role_label": u.role_label, "badge": u.is_admin}
+                for u in users]
+        total_admins = sum(1 for u in users if u.is_admin)
+    else:
+        rows = []
+        for u in users:
+            if u.id == current_user.id or u.is_owner:
+                rows.append({"user": u, "role_label": "Administrator", "badge": True})
+            else:
+                rows.append({"user": u, "role_label": "Member", "badge": False})
+        total_admins = ADMIN_VISIBLE_ADMIN_COUNT
 
-    # A plain admin sees only the summary, with the fixed admin count.
     return render_template(
-        "admin.html", is_owner=False, users=None,
-        total_users=None, total_admins=ADMIN_VISIBLE_ADMIN_COUNT,
+        "admin.html",
+        is_owner=current_user.is_owner,
+        rows=rows,
+        total_users=len(users),
+        total_admins=total_admins,
     )
 
 
