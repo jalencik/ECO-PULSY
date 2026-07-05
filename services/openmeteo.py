@@ -9,18 +9,27 @@ Design notes:
   which allows offline development. Demo data is never shown as real.
 """
 import random
+import time
 from datetime import datetime, timedelta
 
 import requests
 from flask import current_app
 
 from extensions import cache
+from services import snapshots
 from services.aqi import pm25_to_aqi
 from services.regions import REGIONS, get_region
 
 WEATHER_API = "https://api.open-meteo.com/v1/forecast"
 AIR_API = "https://air-quality-api.open-meteo.com/v1/air-quality"
 REQUEST_TIMEOUT = 15
+
+# Retry policy for transient failures (rate limits, 5xx, timeouts). Kept
+# short so an inline request on a cold start never blocks a user for long —
+# the snapshot layer covers the rare case where all retries still fail.
+MAX_RETRIES = 3
+BACKOFF_BASE = 1.0   # seconds; doubles each attempt
+MAX_BACKOFF = 6.0    # cap on any single wait, incl. Retry-After
 
 # WMO weather interpretation codes -> (human label, icon id in the SVG sprite)
 WEATHER_CODES = {
@@ -43,19 +52,47 @@ def describe_weather(code):
 
 
 def _cached(key, builder):
-    """Return the cached value for *key*, rebuilding it when expired.
+    """Return live data for *key*, never surfacing a bare error if avoidable.
 
-    Successful payloads live for CACHE_TTL_SECONDS (the background job
-    refreshes them long before they expire). Error payloads are only
-    cached for 60 seconds so a temporary API hiccup heals quickly.
+    Order of preference:
+    1. A warm in-memory value (the common case — the background job keeps
+       it fresh, so users are served instantly).
+    2. A freshly built value; on success it is cached and snapshotted.
+    3. If the build fails, the last good snapshot from the database, served
+       with ``stale=True`` so the page shows a gentle notice instead of the
+       red error banner. This is what makes rate limits and cold starts
+       invisible to users.
+    4. Only when no snapshot has *ever* existed does the error propagate.
     """
     value = cache.get(key)
     if value is not None:
         return value
+
     value = builder()
-    timeout = 60 if value.get("error") else current_app.config["CACHE_TTL_SECONDS"]
-    cache.set(key, value, timeout=timeout)
+    if not value.get("error"):
+        cache.set(key, value, timeout=current_app.config["CACHE_TTL_SECONDS"])
+        snapshots.save(key, value)
+        return value
+
+    stale = snapshots.load(key)
+    if stale is not None:
+        stale = {**stale, "error": False, "stale": True}
+        # Cache the stale copy briefly so we retry the API soon, not on
+        # every single request.
+        cache.set(key, stale, timeout=60)
+        return stale
+
+    # Genuinely nothing to show — cache the error only briefly so it heals.
+    cache.set(key, value, timeout=60)
     return value
+
+
+def _store(key, value):
+    """Persist a freshly built payload to memory and the snapshot table."""
+    if value.get("error"):
+        return
+    cache.set(key, value, timeout=current_app.config["CACHE_TTL_SECONDS"])
+    snapshots.save(key, value)
 
 
 def warm_cache():
@@ -63,23 +100,66 @@ def warm_cache():
 
     Runs in a background thread on a schedule, so every user request is
     served instantly from memory instead of waiting on external APIs.
-    """
-    ttl = current_app.config["CACHE_TTL_SECONDS"]
 
+    The 14 region detail pages are fetched in TWO batched requests (one
+    weather, one air quality) instead of 28 individual ones, which keeps
+    us well under Open-Meteo's per-IP rate limit on Render's shared
+    outbound addresses. If the batch call fails we fall back to spaced-out
+    individual requests so a partial outage still refreshes what it can.
+    """
     overview = _build_overview()
-    if not overview.get("error"):
-        cache.set("overview", overview, timeout=ttl)
+    _store("overview", overview)
+
+    details = _build_region_details_batch()
+    if details is not None:
+        for slug, detail in details.items():
+            _store(f"detail:region:{slug}", detail)
+        return
 
     for region in REGIONS:
-        detail = _build_detail(region["lat"], region["lon"])
-        if not detail.get("error"):
-            cache.set(f"detail:region:{region['slug']}", detail, timeout=ttl)
+        _store(f"detail:region:{region['slug']}", _build_detail(region["lat"], region["lon"]))
+        time.sleep(0.5)  # gentle stagger on the fallback path
+
+
+def _retry_after_seconds(response, default):
+    """Seconds to wait, honoring a numeric Retry-After header when present."""
+    header = response.headers.get("Retry-After")
+    if header:
+        try:
+            return min(float(header), MAX_BACKOFF)
+        except ValueError:
+            pass  # HTTP-date form — fall back to our own backoff
+    return default
 
 
 def _get_json(url, params):
-    response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
-    response.raise_for_status()
-    return response.json()
+    """GET JSON, retrying transient failures with capped exponential backoff.
+
+    Retries on connection errors, timeouts, HTTP 429 (rate limit) and 5xx.
+    A 429 with a Retry-After header waits exactly as asked (capped). Any
+    other 4xx is a real bug in our request and is raised immediately.
+    """
+    delay = BACKOFF_BASE
+    last_exc = None
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
+            if response.status_code == 429 or response.status_code >= 500:
+                if attempt < MAX_RETRIES - 1:
+                    time.sleep(_retry_after_seconds(response, delay))
+                    delay = min(delay * 2, MAX_BACKOFF)
+                    continue
+            response.raise_for_status()
+            return response.json()
+        except (requests.ConnectionError, requests.Timeout) as exc:
+            last_exc = exc
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(delay)
+                delay = min(delay * 2, MAX_BACKOFF)
+                continue
+            raise
+    # Retries exhausted on repeated 429/5xx responses.
+    raise last_exc or requests.RequestException("Open-Meteo request failed after retries")
 
 
 # ---------------------------------------------------------------------------
@@ -180,6 +260,49 @@ def _build_detail(lat, lon):
         return {"error": True, "demo": False}
 
     return _compose_detail(weather, air, demo=False)
+
+
+def _build_region_details_batch():
+    """Build detail payloads for all 14 regions in two batched requests.
+
+    Open-Meteo accepts comma-separated coordinate lists and returns a JSON
+    array with one full result (current + hourly + daily) per point, so the
+    whole country's detail data costs two HTTP calls instead of 28.
+
+    Returns a ``{slug: detail}`` dict, or None if the batch call fails (the
+    caller then falls back to individual, spaced-out requests).
+    """
+    lats = ",".join(str(r["lat"]) for r in REGIONS)
+    lons = ",".join(str(r["lon"]) for r in REGIONS)
+    try:
+        weather = _get_json(WEATHER_API, {
+            "latitude": lats, "longitude": lons,
+            "current": "temperature_2m,relative_humidity_2m,apparent_temperature,"
+                       "weather_code,wind_speed_10m,wind_direction_10m,surface_pressure",
+            "hourly": "temperature_2m",
+            "daily": "temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max",
+            "forecast_days": 7,
+            "timezone": "Asia/Tashkent",
+        })
+        air = _get_json(AIR_API, {
+            "latitude": lats, "longitude": lons,
+            "current": "pm2_5,pm10,nitrogen_dioxide,ozone,sulphur_dioxide,carbon_monoxide,us_aqi",
+            "hourly": "pm2_5",
+            "forecast_days": 4,
+            "timezone": "Asia/Tashkent",
+        })
+    except requests.RequestException:
+        return None
+
+    weather = weather if isinstance(weather, list) else [weather]
+    air = air if isinstance(air, list) else [air]
+    if len(weather) != len(REGIONS) or len(air) != len(REGIONS):
+        return None  # unexpected shape — let the caller fall back
+
+    return {
+        region["slug"]: _compose_detail(w, a, demo=False)
+        for region, w, a in zip(REGIONS, weather, air)
+    }
 
 
 def _compose_detail(weather, air, demo):

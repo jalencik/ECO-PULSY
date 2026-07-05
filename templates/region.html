@@ -11,6 +11,9 @@
 {% if data.demo %}
   <div class="banner banner-info">Demo data mode is on (DEMO_DATA=1). Values shown are synthetic samples, not live measurements.</div>
 {% endif %}
+{% if data.stale %}
+  <div class="banner banner-info">Live refresh is temporarily delayed — showing the most recent readings.</div>
+{% endif %}
 {% if data.error %}
   <div class="banner banner-error">Live data is temporarily unavailable for this region. Please refresh in a moment.</div>
 {% else %}
