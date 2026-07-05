@@ -10,6 +10,7 @@
 {% block body %}
 {% set current_slug = active_slug if active_slug is defined else (request.view_args.get('slug') if request.view_args else none) %}
 <div class="shell">
+  <div class="sidebar-backdrop" data-sidebar-close></div>
   <aside class="sidebar">
     <a class="sidebar-brand" href="{{ url_for('views.dashboard') }}">{% include "_logo.html" %}</a>
 
@@ -61,11 +62,22 @@
 
   <div class="main">
     <header class="topbar">
-      <div>
-        <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
-        <p class="page-sub">{% block page_sub %}{% endblock %}</p>
+      <div class="topbar-left">
+        <button type="button" class="burger" data-sidebar-toggle aria-label="Open menu">
+          <svg width="20" height="20"><use href="#i-menu"/></svg>
+        </button>
+        <div>
+          <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+          <p class="page-sub">{% block page_sub %}{% endblock %}</p>
+        </div>
       </div>
-      {% block topbar_right %}{% include "_picker.html" %}{% endblock %}
+      <div class="topbar-right">
+        {% block topbar_right %}{% include "_picker.html" %}{% endblock %}
+        <button type="button" class="theme-btn" data-theme-toggle aria-label="Switch theme">
+          <svg class="icon-moon" width="17" height="17"><use href="#i-moon"/></svg>
+          <svg class="icon-sun" width="17" height="17"><use href="#i-sun"/></svg>
+        </button>
+      </div>
     </header>
     <main class="content">
       {% include "_flash.html" %}

@@ -3,6 +3,7 @@
 Application factory and entry point.
 """
 import json
+import os
 import secrets
 from datetime import datetime
 from pathlib import Path
@@ -23,7 +24,7 @@ def create_app(config_class=Config):
 
     # Render (like most PaaS) terminates HTTPS at a proxy; ProxyFix makes
     # Flask see the original scheme/host so secure cookies and url_for work.
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     db.init_app(app)
     cache.init_app(app)
@@ -98,11 +99,25 @@ def _start_prefetch_scheduler(app):
 def _configure_security_headers(app):
     """Baseline security headers recommended by the OWASP checklist."""
 
+    csp = (
+        "default-src 'self'; "
+        "script-src 'self' https://cdn.jsdelivr.net; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
+        "font-src https://fonts.gstatic.com; "
+        "img-src 'self' data:; "
+        "connect-src 'self'; "
+        "frame-ancestors 'none'"
+    )
+
     @app.after_request
     def set_security_headers(response):
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault("Content-Security-Policy", csp)
+        if os.environ.get("RENDER"):  # HTTPS-only host -> enforce HSTS
+            response.headers.setdefault(
+                "Strict-Transport-Security", "max-age=31536000; includeSubDomains")
         return response
 
 
