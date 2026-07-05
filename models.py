@@ -58,3 +58,24 @@ class Location(db.Model):
 
     def __repr__(self) -> str:
         return f"<Location {self.district_name}, {self.region_name}>"
+
+
+class Snapshot(db.Model):
+    """The last successful data payload for one cache key.
+
+    Flask-Caching's SimpleCache lives only in a single worker's memory and
+    is wiped on every restart. Persisting each good payload here means that
+    after a cold start — or when Open-Meteo rate-limits us — the app can
+    serve real (if slightly older) data instead of a blank error page.
+    """
+
+    __tablename__ = "snapshots"
+
+    key = db.Column(db.String(120), primary_key=True)
+    payload = db.Column(db.JSON, nullable=False)
+    updated_at = db.Column(
+        db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+
+    def __repr__(self) -> str:
+        return f"<Snapshot {self.key} @ {self.updated_at:%Y-%m-%d %H:%M}>"

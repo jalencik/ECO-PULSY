@@ -1,59 +1,67 @@
-# Update v3 — Caching, Background Prefetch & Security Hardening
+# Update v4 — Rate-limit resilience, stale-serving & snapshot persistence
 
-## Files changed (sync exactly these 6 to GitHub)
+This update eliminates the **"Live data is temporarily unavailable"** banner
+as a normal occurrence. It attacks the real root causes of that message on
+Render's free tier, not just the symptom.
 
-| File | What changed |
+## Why the banner appeared
+
+1. **No retry.** A single Open-Meteo `429` (rate limit) became an error
+   instantly. Render's free tier shares outbound IPs across many apps, and
+   Open-Meteo throttles per IP, so 429s happen even when your app is polite.
+2. **Last good data was thrown away.** Any failed refresh returned an error
+   payload — even though perfectly good data had loaded minutes earlier.
+3. **The cache is wiped on every restart.** `SimpleCache` lives only in one
+   worker's memory. Render cold-starts constantly, so after each restart the
+   app had nothing to show until the next successful refresh.
+4. **The warm-up burst was ~16 rapid calls** (14 regions fetched one by one),
+   the exact pattern that trips a shared-IP rate limit.
+
+## What changed
+
+| File | Change |
 |---|---|
-| `requirements.txt` | added Flask-Caching, Flask-APScheduler |
-| `extensions.py` | new shared `cache` and `scheduler` instances |
-| `config.py` | cache/prefetch settings + secure session cookies |
-| `app.py` | scheduler start-up, security headers, ProxyFix |
-| `auth.py` | login brute-force lock (5 tries -> 10 min) |
-| `services/openmeteo.py` | Flask-Caching backend + `warm_cache()` job |
+| `services/openmeteo.py` | Retry with backoff honoring `Retry-After`; serve last-good (`stale`) data on failure; batched 14-region warm-up (2 calls, not 28) |
+| `services/snapshots.py` | **New.** Saves/loads the last good payload to the database |
+| `models.py` | **New** `Snapshot` table (auto-created on boot; no manual migration) |
+| `templates/dashboard.html`, `region.html`, `location.html` | Gentle "refresh delayed" notice when showing cached data |
+| `test_resilience.py` | **New.** 14 simulated-failure tests, all passing |
 
-No other files changed. No database schema changed.
+No existing table changed. No data is touched.
 
-## What the upgrade does
+## The four defensive layers
 
-1. **Zero-lag pages.** A background job runs at boot and every 30 minutes,
-   fetching the national overview and all 14 region datasets into an
-   in-memory cache. Users are always served from memory — they never
-   wait for an Open-Meteo round-trip.
-2. **Smart error handling.** Successful data is cached for 40 minutes;
-   error responses for only 60 seconds, so a temporary API hiccup heals
-   fast instead of showing a stale error for half an hour.
-3. **Security (from your uploaded guides).** OWASP security headers on
-   every response; login locks an email for 10 minutes after 5 wrong
-   passwords (brute-force protection); session cookies are HttpOnly,
-   SameSite=Lax and HTTPS-only on Render; ProxyFix makes Flask
-   proxy-aware behind Render's load balancer.
+1. **Retry on 429/5xx/timeout** — up to 3 attempts, honoring the API's
+   `Retry-After` header (capped so a user never waits long).
+2. **Serve last-known-good data** — if a refresh still fails, the previous
+   good payload is shown with a small "refresh delayed" note instead of the
+   red error. The red banner can now appear **only** on a page that has
+   *never once* loaded successfully.
+3. **Snapshot persistence to Postgres/Supabase** — every good payload is
+   saved to a `snapshots` table, so a cold start or restart restores real
+   data instantly, and all workers share it.
+4. **Batched warm-up** — all 14 regions are refreshed in 2 requests, keeping
+   you far under the rate limit.
 
-## How to ship it WITHOUT touching your 30 users' data
+## Honest limitation
 
-Your data lives in Supabase; Render only runs code. A deploy cannot
-delete Supabase rows. Additionally: `db.create_all()` only creates
-tables that don't exist (it never drops or empties existing ones), and
-the district seeder checks `locations` is empty before inserting —
-with 173 rows already there, it does nothing.
+No free-tier stack can promise literally zero errors. What this guarantees is
+that users never see a **blank or broken** page: worst case they see slightly
+older readings with a polite notice, and the app self-heals on the next
+successful refresh.
 
-Exact clicks:
+## Deploy
 
-1. Open the ECO PULSE folder in VS Code.
-2. Source Control icon (left bar) — you'll see the 6 changed files.
-3. Type a message: `Feat: caching layer, background prefetch, security hardening`
-4. Click **Commit**, then **Sync Changes** (or **Push**).
-5. Render auto-deploys the push (or: Render dashboard -> Manual Deploy
-   -> **Deploy latest commit**; "Clear cache & deploy" is also safe —
-   that cache is the BUILD cache, not your database).
-6. Watch the logs for `Booting worker` — then open the site. First page
-   loads instantly warm.
+Your data lives in Supabase; Render only runs code. `db.create_all()` only
+*adds* the new `snapshots` table — it never drops or empties anything.
 
-## How to verify afterwards
+1. Merge/push this branch to `main` on GitHub.
+2. Render auto-deploys (or Manual Deploy → Deploy latest commit).
+3. Watch the logs for `Booting worker`, then open the site.
 
-- Render Logs: every 30 minutes you'll see two bursts of outbound
-  fetches finish silently; every 12 minutes a `GET / ... 200` line with
-  User-Agent `UptimeRobot` (proof your ping bot works).
-- Supabase -> Table Editor -> `users`: still 30 rows. `locations`: still 173.
-- Try 5 wrong passwords on your own account: attempt 6 says
-  "Too many failed attempts" — that's the new brute-force lock
-  (it clears itself after 10 minutes).
+## Verify
+
+- `venv/Scripts/python.exe test_resilience.py` → `14 passed, 0 failed`.
+- In Supabase → Table Editor you'll see a new `snapshots` table filling with
+  one row per region shortly after boot.
+- `users` (30) and `locations` (173) are untouched.
