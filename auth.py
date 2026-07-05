@@ -23,6 +23,21 @@ MAX_ATTEMPTS = 5
 LOCK_SECONDS = 600
 _failed_logins = {}  # email -> {"count": int, "locked_until": float}
 
+# Signup spam protection: at most N registrations per IP per hour.
+SIGNUPS_PER_HOUR = 5
+_signups = {}  # ip -> [timestamps]
+
+
+def _signup_allowed(ip: str) -> bool:
+    now = time.time()
+    window = [t for t in _signups.get(ip, []) if now - t < 3600]
+    _signups[ip] = window
+    return len(window) < SIGNUPS_PER_HOUR
+
+
+def _record_signup(ip: str) -> None:
+    _signups.setdefault(ip, []).append(time.time())
+
 
 def _is_locked(email: str) -> bool:
     entry = _failed_logins.get(email)
@@ -78,6 +93,10 @@ def register():
         return redirect(url_for("views.dashboard"))
 
     if request.method == "POST":
+        if not _signup_allowed(request.remote_addr or "?"):
+            flash("Too many accounts created from this network. Try again in an hour.", "error")
+            return render_template("register.html"), 429
+
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
@@ -103,6 +122,7 @@ def register():
             user.role = "admin"
         db.session.add(user)
         db.session.commit()
+        _record_signup(request.remote_addr or "?")
 
         login_user(user)
         return redirect(url_for("views.dashboard"))

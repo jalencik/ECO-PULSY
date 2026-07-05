@@ -65,3 +65,25 @@ simpler and no longer depends on Open-Meteo at all. Forecast shows 3 days
 
 **Passwords:** stored ONLY as irreversible salted hashes, as before. This
 is deliberate and protects your users — see the chat for the full reason.
+
+---
+
+# Update v6 — Mobile menu, dark mode, Book-security hardening
+
+Push: `git add .` -> `git commit -m "v6: mobile burger menu, dark mode, CSP/HSTS, signup rate limit"` -> `git push origin main`
+
+- **Phones:** burger icon opens the sidebar as a slide-in panel (regions,
+  admin link, your profile chip and Sign out all reachable). Tapping the
+  dark overlay or any link closes it. The district picker moves to its
+  own full-width row on small screens.
+- **Dark mode:** moon/sun button in the top-right (also on the landing
+  page). Choice is remembered on the device; first visit follows the
+  phone's system theme. Full dark palette across dashboard, region pages,
+  admin, auth screens, dropdowns and banners.
+- **Security (from your Book, chapter 12 + appendix checklist):**
+  Content-Security-Policy header (only our own code + our two CDNs can
+  run), HSTS on Render, all inline JS removed (CSP-safe confirms),
+  signup rate limit (5 accounts/hour per IP), real client IPs behind
+  Render's proxy, dependency versions capped. Passwords were already
+  stored as salted hashes — that IS the "password turned into code
+  hackers can't reach" from the book.

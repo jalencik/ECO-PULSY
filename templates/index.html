@@ -10,6 +10,10 @@
       <a href="#data">Data</a>
     </nav>
     <div class="nav-actions">
+      <button type="button" class="theme-btn" data-theme-toggle aria-label="Switch theme">
+        <svg class="icon-moon" width="17" height="17"><use href="#i-moon"/></svg>
+        <svg class="icon-sun" width="17" height="17"><use href="#i-sun"/></svg>
+      </button>
       <a class="btn btn-ghost" href="{{ url_for('auth.login') }}">Sign in</a>
       <a class="btn btn-primary" href="{{ url_for('auth.register') }}">Create free account</a>
     </div>
