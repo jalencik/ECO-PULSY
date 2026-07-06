@@ -23,8 +23,10 @@ MAX_ATTEMPTS = 5
 LOCK_SECONDS = 600
 _failed_logins = {}  # email -> {"count": int, "locked_until": float}
 
-# Signup spam protection: at most N registrations per IP per hour.
-SIGNUPS_PER_HOUR = 5
+# Signup spam protection: at most N successful registrations per IP per
+# hour. Generous on purpose: mobile carriers put thousands of users
+# behind one shared IP (CGNAT), so a tight limit would block real people.
+SIGNUPS_PER_HOUR = 25
 _signups = {}  # ip -> [timestamps]
 
 
@@ -94,7 +96,8 @@ def register():
 
     if request.method == "POST":
         if not _signup_allowed(request.remote_addr or "?"):
-            flash("Too many accounts created from this network. Try again in an hour.", "error")
+            flash("Sign-ups from this network are temporarily paused for security. "
+                  "Please try again a little later.", "error")
             return render_template("register.html"), 429
 
         name = request.form.get("name", "").strip()
