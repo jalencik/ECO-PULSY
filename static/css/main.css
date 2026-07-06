@@ -466,3 +466,24 @@ svg { vertical-align: -0.15em; }
 [data-theme="dark"] .stats-band { background: var(--brand-soft); }
 [data-theme="dark"] .cta-band { background: var(--brand-soft); }
 [data-theme="dark"] .preview-card, [data-theme="dark"] .loc-btn, [data-theme="dark"] .picker .ts-control { background: var(--card); }
+
+/* --- v6.1: native dark scrollbars + tidy sidebar scrollbar ---------------- */
+:root { color-scheme: light; }
+[data-theme="dark"] { color-scheme: dark; }
+
+.sidebar-nav { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.sidebar-nav::-webkit-scrollbar { width: 8px; }
+.sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: var(--line); border-radius: 8px;
+  border: 2px solid var(--card); background-clip: padding-box;
+}
+.sidebar-nav::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+body { scrollbar-color: var(--line) var(--bg); }
+body::-webkit-scrollbar { width: 12px; }
+body::-webkit-scrollbar-track { background: var(--bg); }
+body::-webkit-scrollbar-thumb {
+  background: var(--line); border-radius: 8px;
+  border: 3px solid var(--bg); background-clip: padding-box;
+}
