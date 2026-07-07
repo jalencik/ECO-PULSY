@@ -1,11 +1,13 @@
-<div class="picker" data-picker data-csrf="{{ csrf_token() }}">
-  <select data-picker-region aria-label="Search region">
-    <option value="">Region…</option>
+<div class="picker" data-picker data-csrf="{{ csrf_token() }}"
+     data-t-region="{{ t('picker.region') }}" data-t-district="{{ t('picker.district') }}"
+     data-t-location-error="{{ t('picker.location_error') }}">
+  <select data-picker-region aria-label="{{ t('picker.search_region') }}">
+    <option value="">{{ t('picker.region') }}</option>
   </select>
-  <select data-picker-district aria-label="Search district" disabled>
-    <option value="">District…</option>
+  <select data-picker-district aria-label="{{ t('picker.search_district') }}" disabled>
+    <option value="">{{ t('picker.district') }}</option>
   </select>
-  <button type="button" class="loc-btn" data-my-location title="Use my current location">
+  <button type="button" class="loc-btn" data-my-location title="{{ t('picker.use_location') }}">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
   </button>
 </div>

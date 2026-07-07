@@ -11,7 +11,7 @@ missing the app clearly reports it on the /admin/diagnostics page.
 import json
 import random
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import requests
 from flask import current_app
@@ -21,9 +21,13 @@ from services.aqi import pm25_to_aqi
 from services.regions import REGIONS, get_region
 
 API_URL = "https://api.weatherapi.com/v1/forecast.json"
-REQUEST_TIMEOUT = 15
+# Trimmed from 15s/3 retries: real-time data is always preferred, but if
+# WeatherAPI is struggling we want to fall back to the last-good preview
+# (see _load_stale below) quickly rather than making a request wait up to
+# ~90s worst case. Two attempts still absorb a single transient blip.
+REQUEST_TIMEOUT = 10
 HEADERS = {"User-Agent": "EcoPulse/1.0 (+https://github.com/jalencik/ECO-PULSY)"}
-MAX_RETRIES = 3
+MAX_RETRIES = 2
 STAGGER_SECONDS = 0.4  # tiny pause between the 14 overview calls
 
 # WeatherAPI condition codes -> (human label, icon id in the SVG sprite).
@@ -112,13 +116,27 @@ def _cached(key, builder):
     if stale is not None:
         stale = dict(stale)
         stale["stale"] = True
+        # "Real-time first, honest preview if it can't be helped": tell
+        # the user how old the preview is rather than just "delayed".
+        stale["updated_minutes_ago"] = _minutes_ago(stale.get("updated_at"))
         cache.set(key, stale, timeout=300)
         return stale
     cache.set(key, value, timeout=60)
     return value
 
 
+def _minutes_ago(iso_timestamp):
+    if not iso_timestamp:
+        return None
+    try:
+        then = datetime.fromisoformat(iso_timestamp)
+    except ValueError:
+        return None
+    return max(0, int((datetime.now(timezone.utc) - then).total_seconds() // 60))
+
+
 def _store(key, value):
+    value["updated_at"] = datetime.now(timezone.utc).isoformat()
     cache.set(key, value, timeout=current_app.config["CACHE_TTL_SECONDS"])
     cache.set(f"stale:{key}", value, timeout=0)
     try:

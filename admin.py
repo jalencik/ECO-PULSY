@@ -39,25 +39,28 @@ def owner_required(view):
 @admin_bp.route("/")
 @admin_required
 def panel():
-    """Owner: real roles + management controls.
+    """Owner: real roles + management controls, PLUS the seeded demo
+    members - the owner's "Total users" is real + demo combined.
 
-    Admins: read-only view — real user total, but the admin count is
-    fixed at 2, every other admin is displayed as a normal Member, and
-    the owner appears as a plain Administrator (rank concealed).
+    Admins: read-only view — demo accounts are filtered out of the query
+    entirely (they never see them, in the count or the table), the real
+    admin count is fixed at 2, every other admin is displayed as a normal
+    Member, and the owner appears as a plain Administrator (rank concealed).
     """
-    users = User.query.order_by(User.created_at.desc()).all()
-
     if current_user.is_owner:
-        rows = [{"user": u, "role_label": u.role_label, "badge": u.is_admin}
-                for u in users]
+        users = User.query.order_by(User.created_at.desc()).all()
+        rows = [{"user": u, "role_label": u.role_label, "badge": u.is_admin,
+                 "is_fake": u.is_fake} for u in users]
         total_admins = sum(1 for u in users if u.is_admin)
     else:
+        users = (User.query.filter_by(is_fake=False)
+                 .order_by(User.created_at.desc()).all())
         rows = []
         for u in users:
             if u.id == current_user.id or u.is_owner:
-                rows.append({"user": u, "role_label": "Administrator", "badge": True})
+                rows.append({"user": u, "role_label": "Administrator", "badge": True, "is_fake": False})
             else:
-                rows.append({"user": u, "role_label": "Member", "badge": False})
+                rows.append({"user": u, "role_label": "Member", "badge": False, "is_fake": False})
         total_admins = ADMIN_VISIBLE_ADMIN_COUNT
 
     return render_template(
@@ -81,14 +84,14 @@ def edit_user(user_id):
         new_email = request.form.get("email", user.email).strip().lower()
         if new_email and new_email != user.email:
             if User.query.filter(User.email == new_email, User.id != user.id).first():
-                flash("That email is already used by another account.", "error")
+                flash("flash.email_in_use", "error")
                 return render_template("edit_user.html", user=user), 400
             user.email = new_email
         new_role = request.form.get("role", user.role)
         if new_role in ("user", "admin", "owner"):
             user.role = new_role
         db.session.commit()
-        flash("User updated.", "message")
+        flash("flash.user_updated", "message")
         return redirect(url_for("admin.panel"))
 
     return render_template("edit_user.html", user=user)
@@ -101,11 +104,11 @@ def delete_user(user_id):
     if user is None:
         abort(404)
     if user.id == current_user.id:
-        flash("You cannot delete your own owner account.", "error")
+        flash("flash.cannot_delete_self", "error")
         return redirect(url_for("admin.panel"))
     db.session.delete(user)
     db.session.commit()
-    flash("User deleted.", "message")
+    flash("flash.user_deleted", "message")
     return redirect(url_for("admin.panel"))
 
 

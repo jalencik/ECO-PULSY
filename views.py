@@ -10,6 +10,7 @@ from extensions import db
 from models import Location
 from services import openmeteo
 from services.regions import REGIONS, get_region, slug_for_dataset_key
+from translations import DEFAULT_LANG, SUPPORTED_LANGS
 
 views_bp = Blueprint("views", __name__)
 
@@ -20,6 +21,26 @@ def index():
     if current_user.is_authenticated:
         return redirect(url_for("views.dashboard"))
     return render_template("index.html")
+
+
+@views_bp.route("/set-language/<lang>")
+def set_language(lang):
+    """Switch the site's display language (English / Uzbek).
+
+    Stored as a plain cookie - no account change, and works for
+    logged-out visitors on the landing page too. Redirects back to
+    wherever the switcher was clicked from; any "next" value that isn't
+    a local path is ignored (open-redirect guard) in favour of the
+    homepage.
+    """
+    if lang not in SUPPORTED_LANGS:
+        lang = DEFAULT_LANG
+    target = request.args.get("next") or ""
+    if not target.startswith("/") or target.startswith("//"):
+        target = url_for("views.index")
+    response = redirect(target)
+    response.set_cookie("lang", lang, max_age=60 * 60 * 24 * 365, samesite="Lax")
+    return response
 
 
 @views_bp.route("/dashboard")

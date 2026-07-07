@@ -17,24 +17,24 @@
     <nav class="sidebar-nav">
       <a class="side-link {{ 'active' if request.endpoint == 'views.dashboard' }}"
          href="{{ url_for('views.dashboard') }}">
-        <svg width="17" height="17"><use href="#i-grid"/></svg> Dashboard
+        <svg width="17" height="17"><use href="#i-grid"/></svg> {{ t('sidebar.dashboard') }}
       </a>
 
-      <p class="side-label">Regions</p>
+      <p class="side-label">{{ t('sidebar.regions') }}</p>
       <div class="side-regions">
         {% for r in REGIONS %}
         <a class="side-link {{ 'active' if current_slug == r.slug }}"
            href="{{ url_for('views.region', slug=r.slug) }}">
-          <svg width="15" height="15"><use href="#i-pin"/></svg> {{ r.name }}
+          <svg width="15" height="15"><use href="#i-pin"/></svg> {{ rname(r) }}
         </a>
         {% endfor %}
       </div>
 
       {% if current_user.is_admin %}
-      <p class="side-label">Administration</p>
+      <p class="side-label">{{ t('sidebar.administration') }}</p>
       <a class="side-link {{ 'active' if request.endpoint == 'admin.panel' }}"
          href="{{ url_for('admin.panel') }}">
-        <svg width="17" height="17"><use href="#i-shield"/></svg> Admin panel
+        <svg width="17" height="17"><use href="#i-shield"/></svg> {{ t('sidebar.admin_panel') }}
       </a>
       {% endif %}
     </nav>
@@ -48,13 +48,13 @@
         {% endif %}
         <span class="user-meta">
           <strong>{{ current_user.name }}</strong>
-          <small>{{ current_user.role_label }}</small>
+          <small>{{ t('role.' + current_user.role_label) }}</small>
         </span>
       </div>
       <form action="{{ url_for('auth.logout') }}" method="post">
         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         <button class="btn btn-ghost btn-sm btn-block" type="submit">
-          <svg width="15" height="15"><use href="#i-logout"/></svg> Sign out
+          <svg width="15" height="15"><use href="#i-logout"/></svg> {{ t('sidebar.signout') }}
         </button>
       </form>
     </div>
@@ -73,6 +73,7 @@
       </div>
       <div class="topbar-right">
         {% block topbar_right %}{% include "_picker.html" %}{% endblock %}
+        {% include "_lang_switch.html" %}
         <button type="button" class="theme-btn" data-theme-toggle aria-label="Switch theme">
           <svg class="icon-moon" width="17" height="17"><use href="#i-moon"/></svg>
           <svg class="icon-sun" width="17" height="17"><use href="#i-sun"/></svg>

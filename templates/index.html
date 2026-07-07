@@ -5,17 +5,18 @@
   <div class="container nav-inner">
     <a class="nav-brand" href="{{ url_for('views.index') }}">{% include "_logo.html" %}</a>
     <nav class="nav-links">
-      <a href="#features">Features</a>
-      <a href="#how-it-works">How it works</a>
-      <a href="#data">Data</a>
+      <a href="#features">{{ t('nav.features') }}</a>
+      <a href="#how-it-works">{{ t('nav.how') }}</a>
+      <a href="#data">{{ t('nav.data') }}</a>
     </nav>
     <div class="nav-actions">
+      {% include "_lang_switch.html" %}
       <button type="button" class="theme-btn" data-theme-toggle aria-label="Switch theme">
         <svg class="icon-moon" width="17" height="17"><use href="#i-moon"/></svg>
         <svg class="icon-sun" width="17" height="17"><use href="#i-sun"/></svg>
       </button>
-      <a class="btn btn-ghost" href="{{ url_for('auth.login') }}">Sign in</a>
-      <a class="btn btn-primary" href="{{ url_for('auth.register') }}">Create free account</a>
+      <a class="btn btn-ghost" href="{{ url_for('auth.login') }}">{{ t('nav.signin') }}</a>
+      <a class="btn btn-primary" href="{{ url_for('auth.register') }}">{{ t('nav.signup') }}</a>
     </div>
   </div>
 </header>
@@ -24,27 +25,23 @@
   <section class="hero">
     <div class="container hero-grid">
       <div class="hero-copy">
-        <p class="eyebrow">Air quality intelligence for Uzbekistan</p>
-        <h1>Know what you breathe, in every region of the country.</h1>
-        <p class="lede">
-          Live air quality and weather for all 14 regions of Uzbekistan —
-          EPA health categories, six tracked pollutants and a multi-day outlook,
-          in one clear dashboard.
-        </p>
+        <p class="eyebrow">{{ t('hero.eyebrow') }}</p>
+        <h1>{{ t('hero.title') }}</h1>
+        <p class="lede">{{ t('hero.lede') }}</p>
         <div class="hero-actions">
-          <a class="btn btn-primary btn-lg" href="{{ url_for('auth.register') }}">Get started</a>
-          <a class="btn btn-ghost btn-lg" href="{{ url_for('auth.login') }}">I already have an account</a>
+          <a class="btn btn-primary btn-lg" href="{{ url_for('auth.register') }}">{{ t('hero.get_started') }}</a>
+          <a class="btn btn-ghost btn-lg" href="{{ url_for('auth.login') }}">{{ t('hero.have_account') }}</a>
         </div>
-        <p class="fine-print">Free · No credit card required</p>
+        <p class="fine-print">{{ t('hero.fine_print') }}</p>
       </div>
       <div class="hero-preview" aria-hidden="true">
         <div class="preview-card">
-          <div class="preview-head">National overview</div>
+          <div class="preview-head">{{ t('hero.preview_head') }}</div>
           <div class="preview-row"><span>Tashkent City</span><span class="chip aqi-moderate">AQI 78</span><span>34°</span></div>
           <div class="preview-row"><span>Samarkand</span><span class="chip aqi-good">AQI 42</span><span>33°</span></div>
           <div class="preview-row"><span>Fergana</span><span class="chip aqi-usg">AQI 104</span><span>31°</span></div>
           <div class="preview-row"><span>Nukus</span><span class="chip aqi-good">AQI 38</span><span>36°</span></div>
-          <div class="preview-foot">Sample preview</div>
+          <div class="preview-foot">{{ t('hero.preview_foot') }}</div>
         </div>
       </div>
     </div>
@@ -52,32 +49,32 @@
 
   <section class="stats-band">
     <div class="container stats-inner">
-      <div class="stat"><strong>14</strong><span>regions covered</span></div>
-      <div class="stat"><strong>173</strong><span>districts, coordinate-precise</span></div>
-      <div class="stat"><strong>6</strong><span>pollutants tracked</span></div>
-      <div class="stat"><strong>EPA</strong><span>AQI standard</span></div>
+      <div class="stat"><strong>14</strong><span>{{ t('stats.regions') }}</span></div>
+      <div class="stat"><strong>173</strong><span>{{ t('stats.districts') }}</span></div>
+      <div class="stat"><strong>6</strong><span>{{ t('stats.pollutants') }}</span></div>
+      <div class="stat"><strong>EPA</strong><span>{{ t('stats.aqi') }}</span></div>
     </div>
   </section>
 
   <section class="section" id="features">
     <div class="container">
-      <h2 class="section-title">Everything on one screen</h2>
-      <p class="section-sub">Built for daily decisions: should the kids play outside, is it a good day to run, do you need a mask.</p>
+      <h2 class="section-title">{{ t('features.title') }}</h2>
+      <p class="section-sub">{{ t('features.sub') }}</p>
       <div class="feature-grid">
         <article class="feature-card">
           <span class="feature-icon"><svg width="22" height="22"><use href="#i-pin"/></svg></span>
-          <h3>Full regional coverage</h3>
-          <p>Every viloyat plus Tashkent City and Karakalpakstan — down to all 173 districts, each fetched by its exact coordinates.</p>
+          <h3>{{ t('features.card1.title') }}</h3>
+          <p>{{ t('features.card1.body') }}</p>
         </article>
         <article class="feature-card">
           <span class="feature-icon"><svg width="22" height="22"><use href="#i-activity"/></svg></span>
-          <h3>Health-first air quality</h3>
-          <p>PM2.5, PM10, NO₂, O₃, SO₂ and CO converted into official EPA categories with plain-language advice.</p>
+          <h3>{{ t('features.card2.title') }}</h3>
+          <p>{{ t('features.card2.body') }}</p>
         </article>
         <article class="feature-card">
           <span class="feature-icon"><svg width="22" height="22"><use href="#i-sun-cloud"/></svg></span>
-          <h3>Weather that matters</h3>
-          <p>Current conditions, 48-hour trends and a 3-day forecast, because weather is what moves pollution.</p>
+          <h3>{{ t('features.card3.title') }}</h3>
+          <p>{{ t('features.card3.body') }}</p>
         </article>
       </div>
     </div>
@@ -85,31 +82,28 @@
 
   <section class="section section-alt" id="how-it-works">
     <div class="container">
-      <h2 class="section-title">Three steps</h2>
+      <h2 class="section-title">{{ t('how.title') }}</h2>
       <div class="steps-grid">
-        <div class="step"><span class="step-num">1</span><h3>Create your account</h3><p>Takes under a minute. Free forever for personal use.</p></div>
-        <div class="step"><span class="step-num">2</span><h3>Pick your region</h3><p>All 14 regions live in the sidebar — one click away at any time.</p></div>
-        <div class="step"><span class="step-num">3</span><h3>Check before you go out</h3><p>The AQI card tells you exactly what today's air means for your health.</p></div>
+        <div class="step"><span class="step-num">1</span><h3>{{ t('how.step1.title') }}</h3><p>{{ t('how.step1.body') }}</p></div>
+        <div class="step"><span class="step-num">2</span><h3>{{ t('how.step2.title') }}</h3><p>{{ t('how.step2.body') }}</p></div>
+        <div class="step"><span class="step-num">3</span><h3>{{ t('how.step3.title') }}</h3><p>{{ t('how.step3.body') }}</p></div>
       </div>
     </div>
   </section>
 
   <section class="section" id="data">
     <div class="container data-note">
-      <h2 class="section-title">Honest about the data</h2>
+      <h2 class="section-title">{{ t('data.title') }}</h2>
       <p>
-        Measurements and forecasts come from <a href="https://open-meteo.com" rel="noopener">Open-Meteo</a>,
-        which combines the Copernicus CAMS atmosphere model with leading national weather models.
-        No forecast on Earth is 100% accurate — so instead of pretending, we show you the official
-        EPA uncertainty-aware categories that health agencies use.
+        {{ t('data.p1') }} <a href="https://www.weatherapi.com" rel="noopener">WeatherAPI.com</a>{{ t('data.p2') }}
       </p>
     </div>
   </section>
 
   <section class="cta-band">
     <div class="container cta-inner">
-      <h2>Start monitoring the air you breathe</h2>
-      <a class="btn btn-primary btn-lg" href="{{ url_for('auth.register') }}">Create free account</a>
+      <h2>{{ t('cta.title') }}</h2>
+      <a class="btn btn-primary btn-lg" href="{{ url_for('auth.register') }}">{{ t('cta.button') }}</a>
     </div>
   </section>
 </main>
@@ -117,8 +111,8 @@
 <footer class="site-footer">
   <div class="container footer-inner">
     <span>{% include "_logo.html" %}</span>
-    <span>Data: Open-Meteo (CAMS / national weather models) · AQI: US EPA standard</span>
-    <span>© 2026 EcoPulse</span>
+    <span>{{ t('footer.data') }}</span>
+    <span>{{ t('footer.copyright', year=year) }}</span>
   </div>
 </footer>
 {% endblock %}

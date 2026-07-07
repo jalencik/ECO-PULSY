@@ -9,16 +9,16 @@
 
 {% block main %}
 {% if data.demo %}
-  <div class="banner banner-info">Demo data mode is on (DEMO_DATA=1). Values shown are synthetic samples, not live measurements.</div>
+  <div class="banner banner-info">{{ t('banner.demo') }}</div>
 {% endif %}
 {% if fallback and region %}
-  <div class="banner banner-info">Point data for this district is temporarily unavailable — showing the regional centre ({{ region.capital }}) instead.</div>
+  <div class="banner banner-info">{{ t('banner.fallback', capital=region.capital) }}</div>
 {% endif %}
 {% if data.stale %}
-  <div class="banner banner-info">Live refresh is temporarily delayed by the data provider — showing the most recent successful measurements. Updates resume automatically.</div>
+  <div class="banner banner-info">{{ t('banner.stale_region') }}{% if data.updated_minutes_ago is not none %} {{ t('banner.last_updated', mins=data.updated_minutes_ago) }}{% endif %}</div>
 {% endif %}
 {% if data.error %}
-  <div class="banner banner-error">Live data is temporarily unavailable for this district. Please refresh in a moment.</div>
+  <div class="banner banner-error">{{ t('banner.error_location') }}</div>
 {% else %}
 {% include "_detail_body.html" %}
 {% endif %}

@@ -67,25 +67,25 @@ def _read_photo(file_storage):
         return None, None
     data = file_storage.read()
     if len(data) > current_app.config["MAX_PHOTO_BYTES"]:
-        return None, "Profile photo must be under 800 KB."
+        return None, "flash.photo_too_large"
     mimetype = file_storage.mimetype or "image/png"
     if mimetype not in ALLOWED_PHOTO_TYPES:
-        return None, "Photo must be a PNG, JPG, WEBP or GIF image."
+        return None, "flash.photo_bad_type"
     encoded = base64.b64encode(data).decode("ascii")
     return f"data:{mimetype};base64,{encoded}", None
 
 
 def _validate_registration(name, email, password):
-    """Return a list of human-readable problems (empty list = valid)."""
+    """Return a list of translation keys for problems found (empty = valid)."""
     problems = []
     if len(name) < 2:
-        problems.append("Please enter your full name.")
+        problems.append("flash.name_required")
     if not EMAIL_PATTERN.match(email):
-        problems.append("Please enter a valid email address.")
+        problems.append("flash.email_invalid")
     if len(password) < MIN_PASSWORD_LENGTH:
-        problems.append(f"Password must be at least {MIN_PASSWORD_LENGTH} characters.")
+        problems.append("flash.password_length")
     if User.query.filter_by(email=email).first():
-        problems.append("An account with this email already exists.")
+        problems.append("flash.email_taken")
     return problems
 
 
@@ -96,8 +96,7 @@ def register():
 
     if request.method == "POST":
         if not _signup_allowed(request.remote_addr or "?"):
-            flash("Sign-ups from this network are temporarily paused for security. "
-                  "Please try again a little later.", "error")
+            flash("flash.signup_paused", "error")
             return render_template("register.html"), 429
 
         name = request.form.get("name", "").strip()
@@ -143,13 +142,13 @@ def login():
         password = request.form.get("password", "")
 
         if _is_locked(email):
-            flash("Too many failed attempts. Please try again in 10 minutes.", "error")
+            flash("flash.login_locked", "error")
             return render_template("login.html", email=email), 429
 
         user = User.query.filter_by(email=email).first()
         if user is None or not user.check_password(password):
             _record_failure(email)
-            flash("Incorrect email or password.", "error")
+            flash("flash.bad_credentials", "error")
             return render_template("login.html", email=email), 401
 
         _clear_failures(email)

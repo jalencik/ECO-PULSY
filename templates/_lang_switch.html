@@ -1,0 +1,6 @@
+<div class="lang-switch" role="group" aria-label="Language / Til">
+  {% for code in supported_langs %}
+  <a href="{{ url_for('views.set_language', lang=code, next=request.path) }}"
+     class="lang-btn {{ 'active' if lang == code else '' }}">{{ code | upper }}</a>
+  {% endfor %}
+</div>

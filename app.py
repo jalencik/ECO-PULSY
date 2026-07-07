@@ -2,20 +2,23 @@
 
 Application factory and entry point.
 """
+import gzip
 import json
 import os
 import secrets
 from datetime import datetime
+from io import BytesIO
 from pathlib import Path
 
 import click
-from flask import Flask, abort, render_template, request, session
+from flask import Flask, abort, g, render_template, request, session
 from sqlalchemy import text
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
 from extensions import cache, db, login_manager, scheduler
-from services.regions import REGIONS
+from services.regions import REGIONS, region_display_name
+from translations import DEFAULT_LANG, LANG_LABELS, SUPPORTED_LANGS, t as translate
 
 
 def create_app(config_class=Config):
@@ -42,6 +45,8 @@ def create_app(config_class=Config):
 
     _configure_csrf(app)
     _configure_security_headers(app)
+    _configure_compression(app)
+    _configure_i18n(app)
     _register_error_pages(app)
     _register_cli(app)
 
@@ -60,6 +65,10 @@ def create_app(config_class=Config):
             _seed_locations()
         except Exception:
             # Never block boot on seeding — the CLI command can retry it.
+            db.session.rollback()
+        try:
+            _seed_fake_members()
+        except Exception:
             db.session.rollback()
 
     _start_prefetch_scheduler(app)
@@ -121,6 +130,69 @@ def _configure_security_headers(app):
         return response
 
 
+def _configure_i18n(app):
+    """English / Uzbek language switching.
+
+    The choice lives in a plain "lang" cookie (no account change needed)
+    and is exposed to every template as t()/lang/rname()/year, so most
+    translation work is a template-only change. See translations.py.
+    """
+
+    @app.before_request
+    def set_language():
+        lang = request.cookies.get("lang")
+        g.lang = lang if lang in SUPPORTED_LANGS else DEFAULT_LANG
+
+    @app.context_processor
+    def inject_i18n():
+        lang = getattr(g, "lang", DEFAULT_LANG)
+        return {
+            "lang": lang,
+            "t": lambda key, **kw: translate(lang, key, **kw),
+            "rname": lambda region: region_display_name(region, lang),
+            "supported_langs": SUPPORTED_LANGS,
+            "lang_labels": LANG_LABELS,
+            "year": datetime.now().year,
+        }
+
+
+def _configure_compression(app):
+    """Gzip HTML/CSS/JS/JSON responses (stdlib only — no new dependency).
+
+    Render's free tier does not compress responses for you, and a good
+    share of traffic here is on phones over mobile data, so shrinking
+    every text response meaningfully speeds up page loads. Static files
+    served with send_file, images and streamed responses are untouched
+    (direct_passthrough guards that).
+    """
+    compressible = {
+        "text/html", "text/css", "text/plain", "text/xml",
+        "application/json", "application/javascript", "text/javascript",
+        "image/svg+xml",
+    }
+
+    @app.after_request
+    def gzip_response(response):
+        if response.direct_passthrough or "Content-Encoding" in response.headers:
+            return response
+        if not (200 <= response.status_code < 300):
+            return response
+        if "gzip" not in request.headers.get("Accept-Encoding", "").lower():
+            return response
+        if response.mimetype not in compressible:
+            return response
+        data = response.get_data()
+        if len(data) < 500:  # tiny payloads: gzip overhead isn't worth it
+            return response
+        buffer = BytesIO()
+        with gzip.GzipFile(mode="wb", fileobj=buffer, compresslevel=6) as gz:
+            gz.write(data)
+        response.set_data(buffer.getvalue())
+        response.headers["Content-Encoding"] = "gzip"
+        response.headers["Vary"] = "Accept-Encoding"
+        return response
+
+
 # Columns added after the users table already existed in production.
 # db.create_all() never ALTERs existing tables, so we add them by hand,
 # once, ignoring "already exists" errors. Safe on PostgreSQL and SQLite.
@@ -130,6 +202,10 @@ _NEW_USER_COLUMNS = {
     "latitude": "DOUBLE PRECISION",
     "longitude": "DOUBLE PRECISION",
     "location_label": "VARCHAR(80)",
+    # Marks the 300 seeded demo accounts (see _seed_fake_members). The
+    # NOT NULL DEFAULT FALSE backfills every existing real row to False
+    # in the same statement, so this is never NULL for anyone.
+    "is_fake": "BOOLEAN NOT NULL DEFAULT FALSE",
 }
 
 
@@ -197,6 +273,44 @@ def _seed_locations():
     return count
 
 
+def _seed_fake_members():
+    """Insert 300 clearly-marked demo member accounts (idempotent, once).
+
+    These are NOT real people:
+    - role is always "user" and is_fake is always True
+    - the password is a random value generated and discarded on the
+      spot, so the account can never be used to sign in
+    - admin.py filters is_fake accounts out entirely for plain admins
+      (real count and rows only); only the owner's panel folds them
+      into the combined total, each flagged with a "Demo" badge.
+    Runs once total (checked via is_fake existing anywhere), so redeploys
+    never add a second batch.
+    """
+    from models import User
+
+    if User.query.filter_by(is_fake=True).first() is not None:
+        return 0
+
+    from services.fake_members import generate_fake_members
+
+    existing_emails = {row[0] for row in db.session.query(User.email).all()}
+    count = 0
+    for person in generate_fake_members(300):
+        if person["email"] in existing_emails:
+            continue
+        user = User(
+            name=person["name"], email=person["email"],
+            birthdate=person["birthdate"], role="user", is_fake=True,
+            created_at=person["created_at"],
+        )
+        user.set_password(secrets.token_hex(16))
+        db.session.add(user)
+        existing_emails.add(person["email"])
+        count += 1
+    db.session.commit()
+    return count
+
+
 def _configure_csrf(app):
     """Small session-token CSRF protection for all form posts."""
 
@@ -219,13 +333,11 @@ def _configure_csrf(app):
 def _register_error_pages(app):
     @app.errorhandler(403)
     def forbidden(_error):
-        return render_template("error.html", code=403,
-                               message="You do not have permission to view this page."), 403
+        return render_template("error.html", code=403, message="error.403"), 403
 
     @app.errorhandler(404)
     def not_found(_error):
-        return render_template("error.html", code=404,
-                               message="The page you are looking for does not exist."), 404
+        return render_template("error.html", code=404, message="error.404"), 404
 
 
 def _register_cli(app):
@@ -248,6 +360,12 @@ def _register_cli(app):
         """Insert the 173-district dataset (skips if already seeded)."""
         count = _seed_locations()
         click.echo(f"Inserted {count} locations." if count else "Locations already seeded.")
+
+    @app.cli.command("seed-fake-members")
+    def seed_fake_members():
+        """Insert the 300 demo member accounts (skips if already seeded)."""
+        count = _seed_fake_members()
+        click.echo(f"Inserted {count} demo members." if count else "Demo members already seeded.")
 
 
 app = create_app()

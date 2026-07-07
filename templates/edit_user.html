@@ -1,26 +1,26 @@
 {% extends "app_base.html" %}
 {% block title %}Edit {{ user.name }} — EcoPulse{% endblock %}
-{% block page_title %}Edit user{% endblock %}
-{% block page_sub %}Owner controls · {{ user.email }}{% endblock %}
+{% block page_title %}{{ t('admin.edit_user_title') }}{% endblock %}
+{% block page_sub %}{{ t('admin.owner_controls') }} · {{ user.email }}{% endblock %}
 
 {% block main %}
 <section class="card" style="max-width:520px">
   {% include "_flash.html" %}
   <form method="post">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-    <label for="name">Name</label>
+    <label for="name">{{ t('edit.name_label') }}</label>
     <input id="name" name="name" type="text" value="{{ user.name }}" required>
-    <label for="email">Email</label>
+    <label for="email">{{ t('edit.email_label') }}</label>
     <input id="email" name="email" type="email" value="{{ user.email }}" required>
-    <label for="role">Role</label>
+    <label for="role">{{ t('edit.role_label') }}</label>
     <select id="role" name="role">
-      <option value="user"  {{ 'selected' if user.role == 'user' }}>Member</option>
-      <option value="admin" {{ 'selected' if user.role == 'admin' }}>Administrator</option>
-      <option value="owner" {{ 'selected' if user.role == 'owner' }}>Owner</option>
+      <option value="user"  {{ 'selected' if user.role == 'user' }}>{{ t('role.Member') }}</option>
+      <option value="admin" {{ 'selected' if user.role == 'admin' }}>{{ t('role.Administrator') }}</option>
+      <option value="owner" {{ 'selected' if user.role == 'owner' }}>{{ t('role.Owner') }}</option>
     </select>
     <div class="form-row">
-      <button class="btn btn-primary" type="submit">Save changes</button>
-      <a class="btn btn-ghost" href="{{ url_for('admin.panel') }}">Cancel</a>
+      <button class="btn btn-primary" type="submit">{{ t('edit.save') }}</button>
+      <a class="btn btn-ghost" href="{{ url_for('admin.panel') }}">{{ t('edit.cancel') }}</a>
     </div>
   </form>
 </section>

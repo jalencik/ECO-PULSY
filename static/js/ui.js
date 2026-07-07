@@ -41,4 +41,24 @@
       }
     });
   });
+
+  // --- Casual copy-paste friction -------------------------------------------
+  // IMPORTANT, please read: this is friction, not protection. No website
+  // can block view-source, browser devtools or curl with client-side
+  // JS - the browser always has the full HTML/CSS/JS it was sent, for
+  // every site on the internet, including this one. Anyone who opens
+  // devtools from the browser's own menu (or just disables JavaScript)
+  // bypasses this instantly. What actually keeps this app safe is that
+  // secrets (the WeatherAPI key, database URL, session secret key) live
+  // only in server environment variables and are never sent to the
+  // browser - that's true with or without the block below. Delete this
+  // block anytime it gets in the way of legitimate use (copying an
+  // error message, right-click "open in new tab", accessibility tools).
+  document.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  document.addEventListener("keydown", function (e) {
+    var key = e.key ? e.key.toLowerCase() : "";
+    var blockedCombo = (e.ctrlKey || e.metaKey) &&
+      (key === "u" || (e.shiftKey && (key === "i" || key === "j" || key === "c")));
+    if (key === "f12" || blockedCombo) e.preventDefault();
+  });
 })();

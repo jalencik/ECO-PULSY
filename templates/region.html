@@ -1,7 +1,7 @@
 {% extends "app_base.html" %}
 {% block title %}{{ region.name }} — EcoPulse{% endblock %}
-{% block page_title %}{{ region.name }}{% endblock %}
-{% block page_sub %}Measured at {{ region.capital }} · {{ region.lat }}, {{ region.lon }}{% endblock %}
+{% block page_title %}{{ rname(region) }}{% endblock %}
+{% block page_sub %}{{ t('region.measured_at') }} {{ region.capital }} · {{ region.lat }}, {{ region.lon }}{% endblock %}
 
 {% block page_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
@@ -9,13 +9,13 @@
 
 {% block main %}
 {% if data.demo %}
-  <div class="banner banner-info">Demo data mode is on (DEMO_DATA=1). Values shown are synthetic samples, not live measurements.</div>
+  <div class="banner banner-info">{{ t('banner.demo') }}</div>
 {% endif %}
 {% if data.stale %}
-  <div class="banner banner-info">Live refresh is temporarily delayed by the data provider — showing the most recent successful measurements. Updates resume automatically.</div>
+  <div class="banner banner-info">{{ t('banner.stale_region') }}{% if data.updated_minutes_ago is not none %} {{ t('banner.last_updated', mins=data.updated_minutes_ago) }}{% endif %}</div>
 {% endif %}
 {% if data.error %}
-  <div class="banner banner-error">Live data is temporarily unavailable for this region. Please refresh in a moment.</div>
+  <div class="banner banner-error">{{ t('banner.error_region') }}</div>
 {% else %}
 {% include "_detail_body.html" %}
 {% endif %}

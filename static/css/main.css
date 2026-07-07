@@ -144,8 +144,20 @@ svg { vertical-align: -0.15em; }
 .site-footer { background: #fff; border-top: 1px solid var(--line); padding: 22px 0; }
 .footer-inner { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
 
+/* --- Language switcher ---------------------------------------------------- */
+.lang-switch { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+.lang-btn {
+  padding: 0 10px; height: 40px; display: inline-flex; align-items: center;
+  font: 600 12px "Public Sans", system-ui, sans-serif; color: var(--muted);
+  background: var(--card); text-decoration: none !important;
+}
+.lang-btn + .lang-btn { border-left: 1px solid var(--line); }
+.lang-btn:hover { background: var(--brand-soft); color: var(--ink); }
+.lang-btn.active { background: var(--brand); color: #fff; }
+
 /* --- Auth pages ---------------------------------------------------------- */
-.auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px 16px; }
+.auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px 16px; position: relative; }
+.auth-top { position: absolute; top: 16px; right: 16px; }
 .auth-card {
   width: 100%; max-width: 400px; background: var(--card);
   border: 1px solid var(--line); border-radius: var(--radius);
@@ -304,31 +316,75 @@ svg { vertical-align: -0.15em; }
 .day-temps small { color: var(--muted); font-weight: 500; }
 
 /* --- Tables ------------------------------------------------------------------------ */
+/* Horizontal scroll wrapper so wide tables never break the page layout
+   on narrow phones - the card scrolls internally instead. */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .table th {
   text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;
   color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line);
+  white-space: nowrap;
 }
 .table td { padding: 10px; border-bottom: 1px solid var(--line); }
 .table tbody tr:last-child td { border-bottom: none; }
 .role-badge {
   padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600;
-  text-transform: capitalize;
+  text-transform: capitalize; white-space: nowrap;
 }
 .role-admin { background: var(--brand-soft); color: var(--brand-dark); }
 .role-user { background: #eef0f2; color: var(--muted); }
+.role-fake {
+  margin-left: 5px; background: transparent; color: var(--accent-dark);
+  border: 1px dashed var(--accent); text-transform: none;
+}
 
 /* --- Responsive --------------------------------------------------------------------- */
 @media (max-width: 960px) {
   .hero-grid, .detail-grid { grid-template-columns: 1fr; }
   .hero-preview { display: none; }
   .feature-grid, .steps-grid, .stat-row { grid-template-columns: 1fr; }
-  .week-row { grid-template-columns: repeat(4, 1fr); }
+  /* auto-fit instead of a fixed 4 columns: WeatherAPI's free tier returns
+     a 3-day forecast, so a hardcoded 4-column grid left an odd gap. */
+  .week-row { grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); }
   .nav-links { display: none; }
 }
 @media (max-width: 760px) {
   .sidebar { display: none; }
   .topbar, .content { padding-left: 18px; padding-right: 18px; }
+}
+
+/* Small phones: tighten spacing and stack controls so nothing overlaps
+   or forces horizontal scrolling. Purely layout/spacing - no colours,
+   copy or functionality change. */
+@media (max-width: 480px) {
+  .container { padding: 0 16px; }
+  .content { padding-left: 16px; padding-right: 16px; }
+
+  /* Landing nav: logo stays on its own row, the controls (language,
+     theme, sign in / create account) wrap to a right-aligned row below
+     instead of squeezing onto one line with the brand mark. */
+  .nav-inner { flex-wrap: wrap; row-gap: 10px; height: auto; padding: 12px 0; }
+  .nav-actions { width: 100%; justify-content: flex-end; flex-wrap: wrap; }
+
+  .hero { padding: 40px 0 36px; }
+  .hero h1 { font-size: 27px; }
+  .lede { font-size: 15px; }
+  .hero-actions { flex-direction: column; align-items: stretch; }
+  .hero-actions .btn { width: 100%; }
+
+  /* Even 2-column grid instead of flex space-between, which looks
+     ragged once the 4 stats wrap onto two lines. */
+  .stats-inner { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px 12px; padding: 22px 0; }
+
+  .section { padding: 44px 0; }
+  .section-title { font-size: 23px; }
+  .feature-card, .auth-card { padding: 20px; }
+
+  .cta-inner { text-align: center; justify-content: center; }
+  .cta-inner .btn { width: 100%; }
+
+  .stat-card, .card { padding: 16px; }
+  .page-title { font-size: 20px; }
 }
 
 /* --- Location picker (cascading searchable dropdowns) -------------------- */
@@ -425,7 +481,14 @@ svg { vertical-align: -0.15em; }
   }
   .shell.sidebar-open .sidebar-backdrop { opacity: 1; pointer-events: auto; }
   .topbar { flex-wrap: wrap; gap: 10px; }
-  .picker { width: 100%; max-width: none; order: 3; }
+  /* topbar-right holds the picker + language switch + theme button; it
+     has no wrap of its own by default, so on narrow screens the
+     full-width picker was squeezing against the other controls instead
+     of moving to its own line. Wrapping the group and giving the picker
+     a 100% flex-basis puts language/theme on a compact first row and
+     the picker on a clean full-width row under it. */
+  .topbar-right { flex-wrap: wrap; justify-content: flex-end; row-gap: 10px; }
+  .picker { flex: 1 1 100%; max-width: none; order: 3; }
 }
 
 /* --- Dark theme ------------------------------------------------------------- */
