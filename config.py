@@ -41,9 +41,20 @@ class Config:
     # WeatherAPI.com key (weather + air quality). Set in Render -> Environment.
     WEATHERAPI_KEY = os.environ.get("WEATHERAPI_KEY", "")
 
+    # Currents API key (News section). Free tier: 1,000 requests/day.
+    # Get one at currentsapi.services - the News sidebar item shows a
+    # clear "not configured" state until this is set, it never fakes
+    # articles. Set in Render -> Environment.
+    CURRENTS_API_KEY = os.environ.get("CURRENTS_API_KEY", "")
+
     # The single account that outranks admins. On boot this user is
     # promoted to the "owner" role automatically.
     OWNER_EMAIL = os.environ.get("OWNER_EMAIL", "jaloliddin2009applicant@gmail.com").lower()
+
+    # The single account promoted to "queen" - full owner-level edit/delete
+    # powers and the combined (real + demo) user total, but sees the admin
+    # count and other admins' ranks the same way a plain admin does.
+    QUEEN_EMAIL = os.environ.get("QUEEN_EMAIL", "muratovvaa.m@gmail.com").lower()
 
     # Max uploaded profile photo size (bytes) before rejecting.
     MAX_PHOTO_BYTES = int(os.environ.get("MAX_PHOTO_BYTES", 800_000))

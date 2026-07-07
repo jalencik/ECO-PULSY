@@ -1,0 +1,46 @@
+{% extends "app_base.html" %}
+{% block title %}{{ t('map.title') }} — EcoPulse{% endblock %}
+{% block page_title %}{{ t('map.title') }}{% endblock %}
+{% block page_sub %}{{ t('map.sub') }}{% endblock %}
+
+{% block page_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" defer></script>
+{% endblock %}
+
+{% block main %}
+{% if overview.demo %}
+  <div class="banner banner-info">{{ t('banner.demo') }}</div>
+{% endif %}
+{% if overview.stale %}
+  <div class="banner banner-info">{{ t('banner.stale_dashboard') }}{% if overview.updated_minutes_ago is not none %} {{ t('banner.last_updated', mins=overview.updated_minutes_ago) }}{% endif %}</div>
+{% endif %}
+{% if overview.error %}
+  <div class="banner banner-error">{{ t('banner.error_dashboard') }}</div>
+{% else %}
+
+<section class="card map-card">
+  <div id="map-canvas" role="application" aria-label="{{ t('map.title') }}"></div>
+</section>
+
+<div class="map-legend">
+  <span class="map-legend-title">{{ t('map.legend_title') }}</span>
+  <span class="map-legend-item"><i class="map-dot aqi-good"></i>{{ t('aqi.label.Good') }}</span>
+  <span class="map-legend-item"><i class="map-dot aqi-moderate"></i>{{ t('aqi.label.Moderate') }}</span>
+  <span class="map-legend-item"><i class="map-dot aqi-usg"></i>{{ t('aqi.label.Unhealthy for Sensitive Groups') }}</span>
+  <span class="map-legend-item"><i class="map-dot aqi-unhealthy"></i>{{ t('aqi.label.Unhealthy') }}</span>
+  <span class="map-legend-item"><i class="map-dot aqi-very-unhealthy"></i>{{ t('aqi.label.Very Unhealthy') }}</span>
+  <span class="map-legend-item"><i class="map-dot aqi-hazardous"></i>{{ t('aqi.label.Hazardous') }}</span>
+</div>
+<p class="muted small">{{ t('map.attribution_note') }}</p>
+
+<script type="application/json" id="map-markers">{{ markers | tojson }}</script>
+<script type="application/json" id="map-i18n">
+  {"wind": {{ t('detail.wind') | tojson }}, "humidity": {{ t('detail.humidity') | tojson }},
+   "viewDetails": {{ t('map.view_details') | tojson }}, "measuredAt": {{ t('region.measured_at') | tojson }},
+   "aqiHint": {{ t('aqi.hint') | tojson }}}
+</script>
+<script src="{{ url_for('static', filename='js/map.js') }}" defer></script>
+
+{% endif %}
+{% endblock %}

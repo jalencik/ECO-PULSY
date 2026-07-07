@@ -27,10 +27,11 @@ def admin_required(view):
 
 
 def owner_required(view):
+    """Owner AND Queen both get full management powers (edit/delete)."""
     @wraps(view)
     @login_required
     def wrapped(*args, **kwargs):
-        if not current_user.is_owner:
+        if not current_user.is_owner_or_queen:
             abort(403)
         return view(*args, **kwargs)
     return wrapped
@@ -39,33 +40,55 @@ def owner_required(view):
 @admin_bp.route("/")
 @admin_required
 def panel():
-    """Owner: real roles + management controls, PLUS the seeded demo
-    members - the owner's "Total users" is real + demo combined.
+    """Three-tier visibility.
 
-    Admins: read-only view — demo accounts are filtered out of the query
-    entirely (they never see them, in the count or the table), the real
-    admin count is fixed at 2, every other admin is displayed as a normal
-    Member, and the owner appears as a plain Administrator (rank concealed).
+    Owner: everyone's real role, the real admin count, and the combined
+    (real + demo) total.
+
+    Queen: the same combined total as the owner and the same edit/delete
+    powers, but - like a plain admin - always sees the admin count fixed
+    at 2, and every admin/queen other than herself is shown as a plain
+    Administrator. The owner is always shown truthfully as Owner, and
+    she is always shown truthfully as Queen.
+
+    Plain admins: demo accounts are filtered out of the query entirely
+    (never appear, in the count or the table), admin count fixed at 2,
+    herself/the owner/the queen shown as Administrator, everyone else
+    as Member.
     """
     if current_user.is_owner:
         users = User.query.order_by(User.created_at.desc()).all()
-        rows = [{"user": u, "role_label": u.role_label, "badge": u.is_admin,
-                 "is_fake": u.is_fake} for u in users]
+        rows = [{"user": u, "role_label": u.role_label, "badge": u.is_admin} for u in users]
         total_admins = sum(1 for u in users if u.is_admin)
+    elif current_user.is_queen:
+        users = User.query.order_by(User.created_at.desc()).all()
+        rows = []
+        for u in users:
+            if u.is_owner:
+                rows.append({"user": u, "role_label": "Owner", "badge": True})
+            elif u.id == current_user.id:
+                rows.append({"user": u, "role_label": "Queen", "badge": True})
+            elif u.is_admin:
+                rows.append({"user": u, "role_label": "Administrator", "badge": True})
+            else:
+                rows.append({"user": u, "role_label": "Member", "badge": False})
+        total_admins = ADMIN_VISIBLE_ADMIN_COUNT
     else:
         users = (User.query.filter_by(is_fake=False)
                  .order_by(User.created_at.desc()).all())
         rows = []
         for u in users:
-            if u.id == current_user.id or u.is_owner:
-                rows.append({"user": u, "role_label": "Administrator", "badge": True, "is_fake": False})
+            if u.id == current_user.id or u.is_owner or u.is_queen:
+                rows.append({"user": u, "role_label": "Administrator", "badge": True})
             else:
-                rows.append({"user": u, "role_label": "Member", "badge": False, "is_fake": False})
+                rows.append({"user": u, "role_label": "Member", "badge": False})
         total_admins = ADMIN_VISIBLE_ADMIN_COUNT
 
     return render_template(
         "admin.html",
         is_owner=current_user.is_owner,
+        is_queen=current_user.is_queen,
+        can_manage=current_user.is_owner_or_queen,
         rows=rows,
         total_users=len(users),
         total_admins=total_admins,
@@ -88,7 +111,7 @@ def edit_user(user_id):
                 return render_template("edit_user.html", user=user), 400
             user.email = new_email
         new_role = request.form.get("role", user.role)
-        if new_role in ("user", "admin", "owner"):
+        if new_role in ("user", "admin", "owner", "queen"):
             user.role = new_role
         db.session.commit()
         flash("flash.user_updated", "message")
@@ -105,6 +128,11 @@ def delete_user(user_id):
         abort(404)
     if user.id == current_user.id:
         flash("flash.cannot_delete_self", "error")
+        return redirect(url_for("admin.panel"))
+    if user.is_owner:
+        # Now that Queen also has delete power, make sure nobody - not
+        # even by mistake - can delete the one owner account.
+        flash("flash.cannot_delete_owner", "error")
         return redirect(url_for("admin.panel"))
     db.session.delete(user)
     db.session.commit()
@@ -145,6 +173,7 @@ def diagnostics():
         "Database snapshots stored": Snapshot.query.count(),
         "Demo mode": current_app.config["DEMO_DATA"],
         "Weather key present": bool(key),
+        "News key present": bool(current_app.config.get("CURRENTS_API_KEY")),
         "Prefetch interval (min)": current_app.config["PREFETCH_MINUTES"],
     }
     return render_template("diagnostics.html", tests=tests, state=state)

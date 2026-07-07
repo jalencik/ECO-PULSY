@@ -15,6 +15,7 @@
 {% else %}
 
 {% if summary %}
+<p class="muted small aqi-hint">{{ t('aqi.hint') }}</p>
 <div class="stat-row">
   <div class="stat-card">
     <span class="stat-label">{{ t('dashboard.avg_pm25') }}</span>
@@ -23,14 +24,26 @@
   <div class="stat-card">
     <span class="stat-label">{{ t('dashboard.cleanest') }}</span>
     <span class="stat-value">{{ rname(summary.cleanest) }}</span>
-    <span class="chip {{ summary.cleanest.aqi.css }}">AQI {{ summary.cleanest.aqi.value }}</span>
+    <span class="chip {{ summary.cleanest.aqi.css }}" title="{{ t('aqi.hint') }}">AQI {{ summary.cleanest.aqi.value }}</span>
   </div>
   <div class="stat-card">
     <span class="stat-label">{{ t('dashboard.worst') }}</span>
     <span class="stat-value">{{ rname(summary.worst) }}</span>
-    <span class="chip {{ summary.worst.aqi.css }}">AQI {{ summary.worst.aqi.value }}</span>
+    <span class="chip {{ summary.worst.aqi.css }}" title="{{ t('aqi.hint') }}">AQI {{ summary.worst.aqi.value }}</span>
   </div>
 </div>
+
+{% if summary.worst.aqi %}
+<section class="card health-tip-card">
+  <img class="health-tip-illustration" src="{{ url_for('static', filename='img/mask-illustration.svg') }}"
+       width="100" height="100" alt="" aria-hidden="true">
+  <div class="health-tip-body">
+    <h2 class="card-title">{{ t('dashboard.health_tip_title') }}</h2>
+    <p>{{ t('aqi.advice.' + summary.worst.aqi.label) }}</p>
+    <p class="muted small">{{ t('dashboard.health_tip_context', region=rname(summary.worst)) }}</p>
+  </div>
+</section>
+{% endif %}
 {% endif %}
 
 <div class="region-grid">
@@ -41,7 +54,7 @@
         <h3>{{ rname(r) }}</h3>
         <p class="muted">{{ r.capital }}</p>
       </div>
-      {% if r.aqi %}<span class="chip {{ r.aqi.css }}">AQI {{ r.aqi.value }}</span>{% endif %}
+      {% if r.aqi %}<span class="chip {{ r.aqi.css }}" title="{{ t('aqi.hint') }}">AQI {{ r.aqi.value }}</span>{% endif %}
     </div>
     <div class="region-card-body">
       <span class="w-icon"><svg width="26" height="26"><use href="#i-{{ r.icon }}"/></svg></span>

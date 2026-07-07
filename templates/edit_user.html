@@ -16,6 +16,7 @@
     <select id="role" name="role">
       <option value="user"  {{ 'selected' if user.role == 'user' }}>{{ t('role.Member') }}</option>
       <option value="admin" {{ 'selected' if user.role == 'admin' }}>{{ t('role.Administrator') }}</option>
+      <option value="queen" {{ 'selected' if user.role == 'queen' }}>{{ t('role.Queen') }}</option>
       <option value="owner" {{ 'selected' if user.role == 'owner' }}>{{ t('role.Owner') }}</option>
     </select>
     <div class="form-row">

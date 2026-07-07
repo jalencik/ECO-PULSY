@@ -2,14 +2,16 @@
 small JSON API that powers the cascading location picker."""
 import math
 
-from flask import (Blueprint, abort, jsonify, redirect, render_template,
-                   request, url_for)
+from flask import (Blueprint, abort, current_app, g, jsonify, redirect,
+                   render_template, request, url_for)
 from flask_login import current_user, login_required
 
 from extensions import db
 from models import Location
+from services import news as news_service
 from services import openmeteo
-from services.regions import REGIONS, get_region, slug_for_dataset_key
+from services.regions import (REGIONS, dataset_key_for_slug, get_region,
+                              region_display_name, slug_for_dataset_key)
 from translations import DEFAULT_LANG, SUPPORTED_LANGS
 
 views_bp = Blueprint("views", __name__)
@@ -20,7 +22,17 @@ def index():
     """Landing page (logged-in users go straight to their dashboard)."""
     if current_user.is_authenticated:
         return redirect(url_for("views.dashboard"))
-    return render_template("index.html")
+
+    # Trust badge below the hero CTA. Rounded DOWN to the nearest 50 so it
+    # always reads as a clean, honest number and never overstates the
+    # live count as it grows. Never blocks the landing page from loading.
+    from models import User
+    try:
+        trust_count = (User.query.count() // 50) * 50
+    except Exception:
+        trust_count = 0
+
+    return render_template("index.html", trust_count=trust_count)
 
 
 @views_bp.route("/set-language/<lang>")
@@ -98,6 +110,122 @@ def location(location_id):
         loc=loc, region=reg, data=data,
         fallback=fallback, active_slug=region_slug,
     )
+
+
+@views_bp.route("/rankings")
+@login_required
+def rankings():
+    """Hottest / most polluted / most humid / windiest, all 14 regions.
+
+    Built entirely from the overview cache the dashboard already uses -
+    no extra WeatherAPI calls. Expanding a region to rank its districts
+    is a separate, lazy JSON call (see api_ranking_districts below).
+    """
+    overview = openmeteo.get_overview()
+    return render_template(
+        "rankings.html", overview=overview,
+        rankings=_rank_regions(overview.get("regions", [])),
+    )
+
+
+def _rank_regions(regions):
+    def ranked(metric_fn):
+        usable = [r for r in regions if metric_fn(r) is not None]
+        return sorted(usable, key=metric_fn, reverse=True)
+
+    return {
+        "hottest": ranked(lambda r: r.get("temp")),
+        "polluted": ranked(lambda r: (r.get("aqi") or {}).get("value")),
+        "humid": ranked(lambda r: r.get("humidity")),
+        "windy": ranked(lambda r: r.get("wind")),
+    }
+
+
+@views_bp.route("/api/rankings/<slug>/districts")
+@login_required
+def api_ranking_districts(slug):
+    """Lazy, cached per-district numbers for one region's Rankings expand.
+
+    Only fetches the districts of the ONE region a visitor actually
+    expands - never all 173 up front - so this stays well inside the
+    WeatherAPI free-tier budget. Every district goes through get_detail's
+    existing stale-while-revalidate cache under the SAME cache_key the
+    district's own page uses (loc:<id>), so a district that's already
+    been visited is free, and repeat expands by anyone are free for as
+    long as that cache entry stays fresh. Real data only - a district
+    that can't be fetched is marked "error" rather than guessed at.
+    """
+    reg = get_region(slug)
+    dataset_key = dataset_key_for_slug(slug)
+    if reg is None or dataset_key is None:
+        abort(404)
+
+    locations = (Location.query.filter_by(region_name=dataset_key)
+                 .order_by(Location.district_name).all())
+
+    districts = []
+    for loc in locations:
+        data = openmeteo.get_detail(loc.latitude, loc.longitude, cache_key=f"loc:{loc.id}")
+        if data.get("error"):
+            districts.append({"id": loc.id, "name": loc.district_name, "error": True})
+            continue
+        cur = data.get("current", {})
+        districts.append({
+            "id": loc.id,
+            "name": loc.district_name,
+            "error": False,
+            "stale": bool(data.get("stale")),
+            "temp": cur.get("temp"),
+            "humidity": cur.get("humidity"),
+            "wind": cur.get("wind"),
+            "aqi": data.get("aqi"),
+        })
+
+    return jsonify({
+        "districts": districts,
+        "demo": current_app.config.get("DEMO_DATA", False),
+    })
+
+
+@views_bp.route("/news")
+@login_required
+def news():
+    """Air-quality / environment headlines via Currents API (free tier).
+
+    Real articles only, cached hourly - see services/news.py. If
+    CURRENTS_API_KEY isn't set yet, the page shows a clear "not
+    configured" state rather than any placeholder content.
+    """
+    return render_template("news.html", news=news_service.get_news())
+
+
+@views_bp.route("/map")
+@login_required
+def map_view():
+    """Interactive map: one real marker per region, colour-coded by live
+    AQI. Built from the exact same overview cache the dashboard uses -
+    no extra WeatherAPI calls, no separate boundary dataset to fetch or
+    maintain - just each region's real administrative-centre
+    coordinates (already in services/regions.py) plus its live reading.
+    """
+    overview = openmeteo.get_overview()
+    lang = getattr(g, "lang", DEFAULT_LANG)
+    markers = [
+        {
+            "slug": r["slug"],
+            "name": region_display_name(r, lang),
+            "lat": r["lat"],
+            "lon": r["lon"],
+            "capital": r.get("capital"),
+            "temp": r.get("temp"),
+            "humidity": r.get("humidity"),
+            "wind": r.get("wind"),
+            "pm25": r.get("pm25"),
+            "aqi": r.get("aqi"),
+        }
+        for r in overview.get("regions", [])
+    ]
+    return render_template("map.html", overview=overview, markers=markers)
 
 
 # ---------------------------------------------------------------------------

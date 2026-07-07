@@ -116,10 +116,13 @@ def register():
 
         user = User(name=name, email=email, birthdate=birthdate, photo=photo)
         user.set_password(password)
-        # The configured owner always registers as owner; otherwise the
-        # very first account becomes an administrator.
+        # The configured owner always registers as owner, the configured
+        # queen always registers as queen; otherwise the very first
+        # account becomes an administrator.
         if email == current_app.config.get("OWNER_EMAIL"):
             user.role = "owner"
+        elif email == current_app.config.get("QUEEN_EMAIL"):
+            user.role = "queen"
         elif User.query.count() == 0:
             user.role = "admin"
         db.session.add(user)

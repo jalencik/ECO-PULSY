@@ -19,6 +19,18 @@
          href="{{ url_for('views.dashboard') }}">
         <svg width="17" height="17"><use href="#i-grid"/></svg> {{ t('sidebar.dashboard') }}
       </a>
+      <a class="side-link {{ 'active' if request.endpoint == 'views.map_view' }}"
+         href="{{ url_for('views.map_view') }}">
+        <svg width="17" height="17"><use href="#i-map"/></svg> {{ t('sidebar.map') }}
+      </a>
+      <a class="side-link {{ 'active' if request.endpoint == 'views.rankings' }}"
+         href="{{ url_for('views.rankings') }}">
+        <svg width="17" height="17"><use href="#i-activity"/></svg> {{ t('sidebar.rankings') }}
+      </a>
+      <a class="side-link {{ 'active' if request.endpoint == 'views.news' }}"
+         href="{{ url_for('views.news') }}">
+        <svg width="17" height="17"><use href="#i-news"/></svg> {{ t('sidebar.news') }}
+      </a>
 
       <p class="side-label">{{ t('sidebar.regions') }}</p>
       <div class="side-regions">

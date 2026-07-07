@@ -92,6 +92,11 @@ svg { vertical-align: -0.15em; }
 .lede { font-size: 17px; color: var(--muted); max-width: 46ch; margin: 0 0 26px; }
 .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 .fine-print { margin-top: 14px; font-size: 13px; color: var(--muted); }
+.trust-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--brand-dark);
+}
+.trust-badge svg { flex-shrink: 0; color: var(--brand); }
 
 .preview-card {
   background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
@@ -233,6 +238,8 @@ svg { vertical-align: -0.15em; }
   box-shadow: var(--shadow); padding: 22px; margin-bottom: 18px;
 }
 .card-title { font-size: 15px; font-weight: 600; color: var(--muted); margin-bottom: 16px; }
+.aqi-abbr { font-weight: 400; opacity: 0.7; }
+.aqi-hint { margin: 0 0 12px; }
 
 .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 18px; }
 .stat-row-2 { grid-template-columns: repeat(2, 1fr); }
@@ -249,6 +256,14 @@ svg { vertical-align: -0.15em; }
 .stat-label { font-size: 13px; color: var(--muted); font-weight: 500; }
 .stat-value { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
 .stat-value small { font-size: 13px; font-weight: 500; color: var(--muted); }
+
+/* --- Health tip card ---------------------------------------------------------- */
+.health-tip-card { display: flex; align-items: center; gap: 20px; padding: 18px 22px; margin-bottom: 18px; }
+.health-tip-illustration { width: 88px; height: 88px; flex-shrink: 0; border-radius: 50%; }
+.health-tip-body { flex: 1; min-width: 0; }
+.health-tip-body .card-title { margin-bottom: 4px; }
+.health-tip-body p { margin: 0 0 4px; }
+.health-tip-body p:last-child { margin-bottom: 0; }
 
 /* --- Region grid ------------------------------------------------------------ */
 .region-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
@@ -269,6 +284,95 @@ svg { vertical-align: -0.15em; }
   border-top: 1px solid var(--line); padding-top: 11px;
   font-size: 12.5px; color: var(--muted);
 }
+
+/* --- Rankings ------------------------------------------------------------ */
+.ranking-tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+.ranking-tab {
+  padding: 9px 16px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--card); color: var(--muted); font-size: 13px; font-weight: 600;
+  cursor: pointer;
+}
+.ranking-tab:hover { border-color: var(--brand); color: var(--ink); }
+.ranking-tab.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+.ranking-panel { display: none; }
+.ranking-panel.active { display: block; }
+.rank-row {
+  display: flex; align-items: center; gap: 12px; padding: 12px 4px;
+  border-bottom: 1px solid var(--line); cursor: pointer;
+}
+.ranking-panel .rank-row:last-of-type { border-bottom: none; }
+.rank-row:hover { background: var(--bg); }
+.rank-num {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: var(--brand-soft); color: var(--brand-dark);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+}
+.rank-name { flex: 1; font-weight: 500; }
+.rank-chevron { color: var(--muted); flex-shrink: 0; transition: transform 0.15s ease; }
+.rank-row.expanded .rank-chevron { transform: rotate(90deg); }
+.rank-districts { display: none; padding: 2px 4px 12px 38px; }
+.rank-districts.open { display: block; }
+.rank-row-sub {
+  display: flex; align-items: center; gap: 12px; padding: 8px 0;
+  font-size: 13px; border-bottom: 1px dashed var(--line);
+}
+.rank-row-sub:last-child { border-bottom: none; }
+.rank-row-sub .rank-num { width: 20px; height: 20px; font-size: 11px; background: transparent; color: var(--muted); }
+.rank-row-sub .rank-name { font-weight: 400; }
+.rank-row-stale { opacity: 0.6; }
+.rank-row-stale .rank-name::after { content: " *"; color: var(--muted); }
+.chip-neutral { background: var(--muted); }
+
+/* --- News ------------------------------------------------------------------ */
+.news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.news-card {
+  display: flex; flex-direction: column; color: var(--ink); text-decoration: none;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); overflow: hidden;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.news-card:hover { text-decoration: none; border-color: var(--brand); transform: translateY(-1px); }
+.news-thumb { height: 150px; background-size: cover; background-position: center; background-color: var(--bg); }
+.news-thumb-empty { display: flex; align-items: center; justify-content: center; color: var(--muted); }
+.news-body { padding: 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.news-body h3 { font-size: 15px; line-height: 1.35; margin: 0; }
+.news-body p { margin: 0; line-height: 1.5; }
+.news-meta { margin-top: auto; display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--muted); }
+.news-attribution { margin-top: 16px; }
+
+/* --- Map ------------------------------------------------------------------- */
+.map-card { padding: 0; overflow: hidden; margin-bottom: 16px; }
+#map-canvas { height: 520px; width: 100%; background: var(--bg); }
+.map-legend {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+  padding: 12px 16px; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 10px;
+}
+.map-legend-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.map-legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink); }
+.map-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* Leaflet popup/tooltip content - scoped to our own className so this
+   always wins over Leaflet's own default padding regardless of the
+   two stylesheets' load order. */
+.map-tooltip-rich, .map-popup-wrap .leaflet-popup-content-wrapper {
+  padding: 0; border-radius: 10px; box-shadow: var(--shadow);
+}
+.map-tooltip-rich::before { display: none; }
+.map-popup-wrap .leaflet-popup-content { margin: 0; }
+.map-popup {
+  min-width: 200px; padding: 14px 16px; font: 400 13px "Public Sans", system-ui, sans-serif; color: var(--ink);
+}
+.map-popup h4 { margin: 0 0 2px; font-size: 15px; }
+.map-popup .muted { margin: 0 0 8px; }
+.map-popup-aqi { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.map-popup-stats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px;
+  font-size: 12.5px; color: var(--muted); margin-bottom: 10px;
+}
+.map-popup-link { font-size: 12.5px; font-weight: 600; color: var(--brand); text-decoration: none; }
+.map-popup-link:hover { text-decoration: underline; }
 
 /* --- AQI chips ---------------------------------------------------------------- */
 .chip {
@@ -305,15 +409,36 @@ svg { vertical-align: -0.15em; }
 .aqi-advice { margin: 0 0 8px; }
 .chart-wrap { position: relative; height: 300px; }
 
-.week-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+.day-list { display: flex; flex-direction: column; }
+.day-block { border-bottom: 1px solid var(--line); }
+.day-block:last-child { border-bottom: none; }
 .day-cell {
-  display: flex; flex-direction: column; align-items: center; gap: 7px;
-  padding: 12px 6px; border: 1px solid var(--line); border-radius: 8px;
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  padding: 13px 4px; background: none; border: none; font: inherit; color: inherit;
+  text-align: left; cursor: pointer;
 }
-.day-cell svg { color: var(--brand); }
-.day-name { font-size: 12.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
-.day-temps { font-weight: 700; font-size: 14.5px; }
+.day-cell:hover { background: var(--bg); }
+.day-cell-static { cursor: default; }
+.day-cell-static:hover { background: none; }
+.day-cell svg { color: var(--brand); flex-shrink: 0; }
+.day-name { width: 46px; font-size: 12.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; flex-shrink: 0; }
+.day-temps { font-weight: 700; font-size: 14.5px; margin-left: auto; }
 .day-temps small { color: var(--muted); font-weight: 500; }
+.day-rain { width: 34px; text-align: right; flex-shrink: 0; }
+.day-chevron { color: var(--muted); flex-shrink: 0; transition: transform 0.25s ease; }
+.day-cell[aria-expanded="true"] .day-chevron { transform: rotate(90deg); }
+
+.hour-strip { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+.hour-strip.open { max-height: 200px; }
+.hour-strip-inner { display: flex; gap: 16px; overflow-x: auto; padding: 4px 4px 16px; }
+.hour-cell {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  min-width: 50px; flex-shrink: 0; font-size: 12px;
+}
+.hour-cell svg { color: var(--brand); }
+.hour-time { color: var(--muted); }
+.hour-temp { font-weight: 700; }
+.hour-aqi-chip { font-size: 10.5px; padding: 1px 7px; }
 
 /* --- Tables ------------------------------------------------------------------------ */
 /* Horizontal scroll wrapper so wide tables never break the page layout
@@ -333,24 +458,18 @@ svg { vertical-align: -0.15em; }
 }
 .role-admin { background: var(--brand-soft); color: var(--brand-dark); }
 .role-user { background: #eef0f2; color: var(--muted); }
-.role-fake {
-  margin-left: 5px; background: transparent; color: var(--accent-dark);
-  border: 1px dashed var(--accent); text-transform: none;
-}
 
 /* --- Responsive --------------------------------------------------------------------- */
 @media (max-width: 960px) {
   .hero-grid, .detail-grid { grid-template-columns: 1fr; }
   .hero-preview { display: none; }
   .feature-grid, .steps-grid, .stat-row { grid-template-columns: 1fr; }
-  /* auto-fit instead of a fixed 4 columns: WeatherAPI's free tier returns
-     a 3-day forecast, so a hardcoded 4-column grid left an odd gap. */
-  .week-row { grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); }
   .nav-links { display: none; }
 }
 @media (max-width: 760px) {
   .sidebar { display: none; }
   .topbar, .content { padding-left: 18px; padding-right: 18px; }
+  #map-canvas { height: 380px; }
 }
 
 /* Small phones: tighten spacing and stack controls so nothing overlaps
@@ -385,6 +504,14 @@ svg { vertical-align: -0.15em; }
 
   .stat-card, .card { padding: 16px; }
   .page-title { font-size: 20px; }
+
+  .ranking-tabs { gap: 6px; }
+  .ranking-tab { padding: 7px 12px; font-size: 12.5px; }
+  .rank-row { gap: 8px; }
+  .rank-districts { padding-left: 30px; }
+
+  .health-tip-card { flex-direction: column; text-align: center; gap: 10px; }
+  .health-tip-illustration { width: 72px; height: 72px; }
 }
 
 /* --- Location picker (cascading searchable dropdowns) -------------------- */

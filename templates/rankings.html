@@ -1,0 +1,57 @@
+{% extends "app_base.html" %}
+{% block title %}{{ t('rankings.title') }} — EcoPulse{% endblock %}
+{% block page_title %}{{ t('rankings.title') }}{% endblock %}
+{% block page_sub %}{{ t('rankings.sub') }}{% endblock %}
+
+{% block main %}
+{% macro metric_value(metric, r) -%}
+  {%- if metric == 'hottest' -%}
+    {{ r.temp | round | int if r.temp is not none else '–' }}°
+  {%- elif metric == 'humid' -%}
+    {{ r.humidity if r.humidity is not none else '–' }}%
+  {%- elif metric == 'windy' -%}
+    {{ r.wind | round | int if r.wind is not none else '–' }} km/h
+  {%- elif metric == 'polluted' -%}
+    AQI {{ r.aqi.value if r.aqi else '–' }}
+  {%- endif -%}
+{%- endmacro %}
+
+{% if overview.demo %}
+  <div class="banner banner-info">{{ t('banner.demo') }}</div>
+{% endif %}
+{% if overview.error %}
+  <div class="banner banner-error">{{ t('banner.error_dashboard') }}</div>
+{% else %}
+
+<div class="ranking-tabs" role="tablist">
+  <button type="button" class="ranking-tab active" data-metric="hottest">{{ t('rankings.tab_hottest') }}</button>
+  <button type="button" class="ranking-tab" data-metric="polluted">{{ t('rankings.tab_polluted') }}</button>
+  <button type="button" class="ranking-tab" data-metric="humid">{{ t('rankings.tab_humid') }}</button>
+  <button type="button" class="ranking-tab" data-metric="windy">{{ t('rankings.tab_windy') }}</button>
+</div>
+
+{% for metric, regions in rankings.items() %}
+<section class="card ranking-panel {{ 'active' if loop.first }}" id="panel-{{ metric }}">
+  <p class="muted small aqi-hint">{{ t('rankings.expand_hint') }}</p>
+  {% for r in regions %}
+  <div class="rank-row" data-slug="{{ r.slug }}" data-metric="{{ metric }}" tabindex="0" role="button"
+       aria-expanded="false">
+    <span class="rank-num">{{ loop.index }}</span>
+    <span class="rank-name">{{ rname(r) }}</span>
+    <span class="chip {{ r.aqi.css if metric == 'polluted' and r.aqi else 'chip-neutral' }}">{{ metric_value(metric, r) }}</span>
+    <svg class="rank-chevron" width="16" height="16"><use href="#i-arrow"/></svg>
+  </div>
+  <div class="rank-districts" id="districts-{{ metric }}-{{ r.slug }}"
+       data-loading-text="{{ t('rankings.loading') }}"
+       data-error-text="{{ t('rankings.load_error') }}"
+       data-empty-text="{{ t('rankings.no_data') }}"
+       data-stale-text="{{ t('rankings.stale_district') }}"></div>
+  {% else %}
+  <p class="muted">{{ t('rankings.no_data') }}</p>
+  {% endfor %}
+</section>
+{% endfor %}
+
+{% endif %}
+<script src="{{ url_for('static', filename='js/rankings.js') }}" defer></script>
+{% endblock %}

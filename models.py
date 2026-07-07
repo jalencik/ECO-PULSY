@@ -37,13 +37,22 @@ class User(UserMixin, db.Model):
         return self.role == "owner"
 
     @property
+    def is_queen(self) -> bool:
+        return self.role == "queen"
+
+    @property
+    def is_owner_or_queen(self) -> bool:
+        """Full management powers: edit/delete any user. See admin.py."""
+        return self.role in ("owner", "queen")
+
+    @property
     def is_admin(self) -> bool:
-        # Owners have every admin power too.
-        return self.role in ("admin", "owner")
+        # Owners and the Queen have every admin power too.
+        return self.role in ("admin", "owner", "queen")
 
     @property
     def role_label(self) -> str:
-        return {"owner": "Owner", "admin": "Administrator"}.get(self.role, "Member")
+        return {"owner": "Owner", "queen": "Queen", "admin": "Administrator"}.get(self.role, "Member")
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
