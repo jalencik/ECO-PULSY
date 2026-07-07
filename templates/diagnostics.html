@@ -6,6 +6,7 @@
 {% block main %}
 <section class="card">
   <h2 class="card-title">External API tests (run on page load)</h2>
+  <div class="table-scroll">
   <table class="table">
     <thead><tr><th>Service</th><th>Result</th><th>Response time</th><th>Detail</th></tr></thead>
     <tbody>
@@ -24,10 +25,12 @@
       {% endfor %}
     </tbody>
   </table>
+  </div>
 </section>
 
 <section class="card">
   <h2 class="card-title">Application state</h2>
+  <div class="table-scroll">
   <table class="table">
     <tbody>
       {% for label, value in state.items() %}
@@ -35,5 +38,6 @@
       {% endfor %}
     </tbody>
   </table>
+  </div>
 </section>
 {% endblock %}

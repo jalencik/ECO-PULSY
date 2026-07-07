@@ -87,3 +87,52 @@ Push: `git add .` -> `git commit -m "v6: mobile burger menu, dark mode, CSP/HSTS
   Render's proxy, dependency versions capped. Passwords were already
   stored as salted hashes — that IS the "password turned into code
   hackers can't reach" from the book.
+
+---
+
+# Update v7 — Uzbek/English, demo members, phone polish, speed + hardening
+
+Push: `git add .` -> `git commit -m "v7: EN/UZ language, 300 demo members, mobile polish, gzip + gunicorn threads, retry tuning"` -> `git push origin main`
+
+- **English / Uzbek language switcher** — "EN / UZ" pill in the top-right
+  of every page (landing included). Choice is remembered in a cookie, no
+  account change needed. Translations live in one place: `translations.py`.
+  The admin diagnostics page stays English-only (it's an internal ops
+  tool); everything a regular visitor sees is bilingual.
+- **300 demo member accounts** (`services/fake_members.py`) — clearly
+  fake Uzbek names/emails, seeded once automatically on the next deploy.
+  Role is always "Member," and they can never log in (random, discarded
+  password). Only **your** owner panel folds them into the combined
+  "Total users" count, each tagged with a small "Demo" pill only you can
+  see. Plain admins query real accounts only — same count and table as
+  before, demo rows never appear to them at all.
+- **Phone layout fixes** (no design/colour/content changes, layout only):
+  fixed a real bug where the topbar's language/theme controls and the
+  region search box could squeeze together instead of stacking on narrow
+  screens; landing page nav wraps to its own row instead of overflowing;
+  hero buttons stack full-width on small phones; the admin/diagnostics
+  tables scroll horizontally inside their card instead of breaking the
+  page; the day-forecast strip now sizes itself to however many days
+  WeatherAPI actually returns (was hardcoded for 7, you get 3).
+  Additional fix: rebuilt the "Honest about the data" and footer credit
+  on the landing page, which still said "Open-Meteo" from before the v5
+  provider switch — they now correctly say WeatherAPI.com.
+- **Speed:** gzip compression on every HTML/CSS/JS/JSON response
+  (stdlib only, no new dependency), a week of browser caching for
+  `/static/*`, and gunicorn now runs with 4 threads (`--worker-class
+  gthread --threads 4`, still **one process** so the background
+  prefetch scheduler can't accidentally double up) plus a 90s timeout
+  so a slow upstream retry gets a real answer instead of a killed
+  worker. WeatherAPI calls now time out and fall back to the last-good
+  preview faster (10s/2 tries instead of 15s/3) — real-time data is
+  still always tried first, you just don't wait as long for the
+  preview when it's struggling. The stale/preview banners now say how
+  many minutes old that last good reading is.
+- **View-source, honestly:** no website — this one included — can stop
+  a visitor's browser from showing them the HTML/CSS/JS it already sent,
+  that's how the web works for every site, not an EcoPulse gap. What
+  actually matters is already true here: your WeatherAPI key, database
+  URL and secret key only ever live in Render's environment variables
+  and are never sent to the browser. Added a right-click/devtools-shortcut
+  block as light friction (labelled clearly in `static/js/ui.js` as
+  friction, not protection — delete it anytime it's annoying).

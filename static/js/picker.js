@@ -13,13 +13,13 @@
 
   const district = new TomSelect(wrap.querySelector("[data-picker-district]"), {
     ...settings,
-    placeholder: "District…",
+    placeholder: wrap.dataset.tDistrict || "District…",
   });
   district.disable();
 
   const region = new TomSelect(wrap.querySelector("[data-picker-region]"), {
     ...settings,
-    placeholder: "Region…",
+    placeholder: wrap.dataset.tRegion || "Region…",
   });
 
   fetch("/api/regions")
@@ -78,7 +78,7 @@
         },
         () => {
           locBtn.classList.remove("loading");
-          alert("Could not get your location. Please allow location access.");
+          alert(wrap.dataset.tLocationError || "Could not get your location. Please allow location access.");
         }
       );
     });

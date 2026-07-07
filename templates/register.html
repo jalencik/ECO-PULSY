@@ -3,26 +3,27 @@
 
 {% block body %}
 <main class="auth-page">
+  <div class="auth-top">{% include "_lang_switch.html" %}</div>
   <div class="auth-card">
     <a class="auth-brand" href="{{ url_for('views.index') }}">{% include "_logo.html" %}</a>
-    <h1>Create your account</h1>
-    <p class="auth-sub">Free access to air quality across Uzbekistan.</p>
+    <h1>{{ t('auth.create_title') }}</h1>
+    <p class="auth-sub">{{ t('auth.create_sub') }}</p>
     {% include "_flash.html" %}
     <form method="post" enctype="multipart/form-data" novalidate>
       <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-      <label for="name">Full name</label>
+      <label for="name">{{ t('auth.full_name') }}</label>
       <input id="name" name="name" type="text" value="{{ name or '' }}" required autofocus>
-      <label for="email">Email</label>
+      <label for="email">{{ t('auth.email') }}</label>
       <input id="email" name="email" type="email" value="{{ email or '' }}" required>
-      <label for="password">Password <span class="hint">(at least 8 characters)</span></label>
+      <label for="password">{{ t('auth.password') }} <span class="hint">{{ t('auth.password_hint') }}</span></label>
       <input id="password" name="password" type="password" minlength="8" required>
-      <label for="birthdate">Date of birth <span class="hint">(recommended)</span></label>
+      <label for="birthdate">{{ t('auth.birthdate') }} <span class="hint">{{ t('auth.recommended') }}</span></label>
       <input id="birthdate" name="birthdate" type="date" value="{{ birthdate or '' }}">
-      <label for="photo">Profile photo <span class="hint">(optional)</span></label>
+      <label for="photo">{{ t('auth.photo') }} <span class="hint">{{ t('auth.optional') }}</span></label>
       <input id="photo" name="photo" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
-      <button class="btn btn-primary btn-block" type="submit">Create account</button>
+      <button class="btn btn-primary btn-block" type="submit">{{ t('auth.create_button') }}</button>
     </form>
-    <p class="auth-alt">Already registered? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
+    <p class="auth-alt">{{ t('auth.already_registered') }} <a href="{{ url_for('auth.login') }}">{{ t('auth.signin_link') }}</a></p>
   </div>
 </main>
 {% endblock %}

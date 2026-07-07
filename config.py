@@ -60,3 +60,10 @@ class Config:
     # Set DEMO_DATA=1 to run without internet access (development only).
     # The UI clearly labels demo data so it can never be mistaken for real.
     DEMO_DATA = os.environ.get("DEMO_DATA") == "1"
+
+    # --- Performance ---------------------------------------------------
+    # Lets browsers cache /static/* (CSS/JS) instead of re-fetching them on
+    # every page view. A week is a deliberate middle ground: a meaningful
+    # speed-up on repeat visits (especially on phones/slower connections)
+    # without risking months-long staleness after a future deploy.
+    SEND_FILE_MAX_AGE_DEFAULT = int(os.environ.get("STATIC_CACHE_SECONDS", 604800))

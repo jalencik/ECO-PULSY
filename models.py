@@ -26,6 +26,12 @@ class User(UserMixin, db.Model):
     longitude = db.Column(db.Float, nullable=True)
     location_label = db.Column(db.String(80), nullable=True)
 
+    # Marks the seeded demo accounts. Never True for a real registration -
+    # only app.py's one-time _seed_fake_members() sets this. Admins never
+    # see these rows at all; only the owner's panel folds them into the
+    # combined total (see admin.py).
+    is_fake = db.Column(db.Boolean, nullable=False, default=False)
+
     @property
     def is_owner(self) -> bool:
         return self.role == "owner"

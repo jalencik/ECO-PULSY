@@ -5,7 +5,15 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    # workers=1 is deliberate: the background prefetch scheduler (see
+    # _start_prefetch_scheduler in app.py) must only run once per process,
+    # so a second worker process would double every external API call.
+    # --threads gives real concurrency for I/O-bound requests (external
+    # API + DB) within that one process. --timeout is raised well above
+    # gunicorn's 30s default so a slow-but-recovering upstream retry
+    # (see services/openmeteo.py) gets a real answer instead of a killed
+    # worker mid-request.
+    startCommand: gunicorn --workers 1 --worker-class gthread --threads 4 --timeout 90 app:app
     envVars:
       - key: SECRET_KEY
         generateValue: true

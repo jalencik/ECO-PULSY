@@ -29,6 +29,34 @@ def get_region(slug: str):
     return _BY_SLUG.get(slug)
 
 
+# Uzbek display names for the 14 regions. Slugs and REGIONS[i]["name"]
+# (English) are never changed - this is purely a display-layer lookup
+# used by the rname() Jinja helper (see app.py) when lang == "uz".
+REGION_NAME_UZ = {
+    "tashkent-city": "Toshkent shahri",
+    "tashkent": "Toshkent viloyati",
+    "andijan": "Andijon",
+    "bukhara": "Buxoro",
+    "fergana": "Farg'ona",
+    "jizzakh": "Jizzax",
+    "kashkadarya": "Qashqadaryo",
+    "khorezm": "Xorazm",
+    "namangan": "Namangan",
+    "navoiy": "Navoiy",
+    "samarkand": "Samarqand",
+    "sirdaryo": "Sirdaryo",
+    "surkhandarya": "Surxondaryo",
+    "karakalpakstan": "Qoraqalpog'iston",
+}
+
+
+def region_display_name(region: dict, lang: str) -> str:
+    """Region name in the active language (Uzbek names for lang == "uz")."""
+    if lang == "uz":
+        return REGION_NAME_UZ.get(region.get("slug"), region["name"])
+    return region["name"]
+
+
 # Region names as they appear in data/districts.json -> region slug.
 # Used to fall back to the regional centre and to highlight the right
 # sidebar entry when a district page is open.
