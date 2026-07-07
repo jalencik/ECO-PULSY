@@ -141,7 +141,8 @@
     { "name": "Nurota", "lat": 40.5667, "lon": 65.6833 },
     { "name": "Tomdi", "lat": 41.7667, "lon": 64.6333 },
     { "name": "Uchquduq", "lat": 42.1567, "lon": 63.5533 },
-    { "name": "Khatirchi", "lat": 40.1167, "lon": 65.9333 }
+    { "name": "Khatirchi", "lat": 40.1167, "lon": 65.9333 },
+    { "name": "Zarafshon", "lat": 41.5792, "lon": 64.2075 }
   ],
   "Samarkand Region": [
     { "name": "Bulungur", "lat": 39.7500, "lon": 67.2833 },

@@ -1,0 +1,41 @@
+{% extends "app_base.html" %}
+{% block title %}{{ t('news.title') }} — EcoPulse{% endblock %}
+{% block page_title %}{{ t('news.title') }}{% endblock %}
+{% block page_sub %}{{ t('news.sub') }}{% endblock %}
+
+{% block main %}
+{% if not news.configured %}
+  <div class="banner banner-info">{{ t('news.not_configured') }}</div>
+{% elif news.error and not news.articles %}
+  <div class="banner banner-error">{{ t('news.unavailable') }}</div>
+{% else %}
+  {% if news.stale %}
+    <div class="banner banner-info">{{ t('news.stale') }}</div>
+  {% endif %}
+
+  {% if news.articles %}
+  <div class="news-grid">
+    {% for a in news.articles %}
+    <a class="news-card" href="{{ a.url }}" target="_blank" rel="noopener noreferrer">
+      {% if a.image %}
+      <div class="news-thumb" style="background-image:url('{{ a.image }}')"></div>
+      {% else %}
+      <div class="news-thumb news-thumb-empty"><svg width="26" height="26"><use href="#i-sun-cloud"/></svg></div>
+      {% endif %}
+      <div class="news-body">
+        <h3>{{ a.title }}</h3>
+        {% if a.description %}<p class="muted small">{{ a.description }}</p>{% endif %}
+        <div class="news-meta">
+          {% if a.author %}<span>{{ a.author }}</span>{% endif %}
+          {% if a.published %}<span>{{ a.published }}</span>{% endif %}
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  <p class="muted small news-attribution">{{ t('news.attribution') }}</p>
+  {% else %}
+  <p class="muted">{{ t('news.no_articles') }}</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

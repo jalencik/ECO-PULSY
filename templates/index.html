@@ -33,15 +33,18 @@
           <a class="btn btn-ghost btn-lg" href="{{ url_for('auth.login') }}">{{ t('hero.have_account') }}</a>
         </div>
         <p class="fine-print">{{ t('hero.fine_print') }}</p>
+        {% if trust_count %}
+        <p class="trust-badge"><svg width="14" height="14"><use href="#i-users"/></svg> {{ t('hero.trust_badge', count=trust_count) }}</p>
+        {% endif %}
       </div>
       <div class="hero-preview" aria-hidden="true">
         <div class="preview-card">
           <div class="preview-head">{{ t('hero.preview_head') }}</div>
-          <div class="preview-row"><span>Tashkent City</span><span class="chip aqi-moderate">AQI 78</span><span>34°</span></div>
-          <div class="preview-row"><span>Samarkand</span><span class="chip aqi-good">AQI 42</span><span>33°</span></div>
-          <div class="preview-row"><span>Fergana</span><span class="chip aqi-usg">AQI 104</span><span>31°</span></div>
-          <div class="preview-row"><span>Nukus</span><span class="chip aqi-good">AQI 38</span><span>36°</span></div>
-          <div class="preview-foot">{{ t('hero.preview_foot') }}</div>
+          <div class="preview-row"><span>Tashkent City</span><span class="chip aqi-moderate" title="{{ t('aqi.hint') }}">AQI 78</span><span>34°</span></div>
+          <div class="preview-row"><span>Samarkand</span><span class="chip aqi-good" title="{{ t('aqi.hint') }}">AQI 42</span><span>33°</span></div>
+          <div class="preview-row"><span>Fergana</span><span class="chip aqi-usg" title="{{ t('aqi.hint') }}">AQI 104</span><span>31°</span></div>
+          <div class="preview-row"><span>Nukus</span><span class="chip aqi-good" title="{{ t('aqi.hint') }}">AQI 38</span><span>36°</span></div>
+          <div class="preview-foot">{{ t('hero.preview_foot') }} · {{ t('aqi.hint') }}</div>
         </div>
       </div>
     </div>

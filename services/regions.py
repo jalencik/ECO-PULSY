@@ -81,3 +81,15 @@ DATASET_KEY_TO_SLUG = {
 def slug_for_dataset_key(key: str):
     """Region slug for a dataset region name, or None if unknown."""
     return DATASET_KEY_TO_SLUG.get(key)
+
+
+_SLUG_TO_DATASET_KEY = {slug: key for key, slug in DATASET_KEY_TO_SLUG.items()}
+
+
+def dataset_key_for_slug(slug: str):
+    """The data/districts.json top-level key for a region slug (reverse
+    of slug_for_dataset_key), or None if unknown. Needed anywhere a
+    region page's slug has to look up that region's Location rows,
+    since the dataset's region names don't match REGIONS[i]["name"]
+    exactly (e.g. "Navoiy Region" vs "Navoiy")."""
+    return _SLUG_TO_DATASET_KEY.get(slug)

@@ -136,3 +136,94 @@ Push: `git add .` -> `git commit -m "v7: EN/UZ language, 300 demo members, mobil
   and are never sent to the browser. Added a right-click/devtools-shortcut
   block as light friction (labelled clearly in `static/js/ui.js` as
   friction, not protection — delete it anytime it's annoying).
+
+---
+
+# Update v8 — Queen rank, Map, Rankings, News, hourly forecast, diverse members
+
+## Push the code
+
+```
+git add .
+```
+```
+git commit -m "v8: Queen role, interactive map, rankings, news, hourly forecast expand"
+```
+```
+git push origin main
+```
+
+## One new environment variable (optional but recommended)
+
+News (step below) needs a free Currents API key or it just shows a
+clean "not configured" message — nothing breaks without it.
+
+| Key | Value |
+|---|---|
+| `CURRENTS_API_KEY` | your free key from https://currentsapi.services/en/register |
+
+Render -> your service -> **Environment** -> add it -> **Manual Deploy
+-> Deploy latest commit**. `QUEEN_EMAIL` already defaults to
+`muratovvaa.m@gmail.com` in code, so you don't need to set it unless
+you want to change who holds the rank.
+
+## What changed and why
+
+- **Queen rank.** `muratovvaa.m@gmail.com` is now a selectable role
+  (Owner's Edit user screen) and gets her own visibility tier: the same
+  combined real+demo total and the same edit/delete power as you, but —
+  exactly like a plain admin — her own admin-count view stays fixed at
+  **2**, and every other admin is shown to her as a plain
+  "Administrator," never as "Queen." Only she is ever labelled Queen,
+  and only you and she can see the 600 combined users; plain admins
+  still see only the real accounts and a count of 2, unchanged.
+- **Diverse demo members.** Rebuilt the 300 demo accounts with much
+  larger name pools (~140 male / ~130 female first names, ~125
+  surnames) and 10 different randomized email-shape patterns across 9
+  real providers, so repeats are far rarer. A version marker makes this
+  regenerate automatically on your already-live database — no manual
+  reset needed.
+- **AQI clarity.** Every AQI chip and figure now has a "(Air Quality
+  Index)" caption or hover tooltip explaining the abbreviation.
+- **"Trusted by 600+ users" badge** on the landing page — computed live
+  from the real user count (rounded down to the nearest 50), not a
+  fixed number.
+- **Rankings page** (new sidebar item): Hottest / Most Polluted /
+  Most Humid / Windiest tabs across all 14 regions, expand any region
+  to see its districts ranked the same way. Built entirely from data
+  already being fetched for the dashboard, so it costs zero extra API
+  calls.
+- **Interactive Map** (new sidebar item): every region plotted on a
+  real Uzbekistan map (Leaflet + OpenStreetMap) as a colour-coded AQI
+  marker — hover for the quick tooltip (condition, AQI, gas readings,
+  last-updated), tap/click to open a popup with a link to the full
+  region page.
+- **News page** (new sidebar item): real headlines from Currents API,
+  refreshed hourly, filtered to environment/air-quality/climate topics.
+  Shows a clear "not configured" state if you skip the API key, and a
+  clear "temporarily unavailable" state if the API itself is down —
+  never fake or placeholder articles.
+- **Hourly forecast.** Tap any day in the forecast strip to expand it
+  into that day's real hour-by-hour temperature and AQI, sourced
+  directly from WeatherAPI's hourly data — no interpolation or
+  guessing between points.
+- **7-day forecast — investigated, stayed honest.** You asked me to
+  search for a free API offering a real 7-day forecast, and fall back
+  to 3 days rather than fabricate if I couldn't. I found one
+  (Open-Meteo) but it fails on two counts: its free tier's license
+  bans commercial/production use, and it's the exact provider v5
+  already removed from this app for rate-limiting on Render's shared
+  IPs. Paying for real 7-day data (WeatherAPI's Starter plan, $7/mo or
+  $75/yr) remains the only honest upgrade path whenever you want it —
+  just add a billing method on weatherapi.com and the same
+  `WEATHERAPI_KEY` will automatically start returning 7 days instead of
+  3, no code change needed. Until then the app stays on 3 real days
+  rather than show invented ones.
+- **Missing district added.** Zarafshon (Navoiy Region) was missing
+  from the district list — added with verified coordinates. All 14
+  region names and every district name were re-checked against current
+  Uzbek administrative sources; no misspellings found elsewhere.
+- **Health tip card** on the dashboard — a small illustration next to
+  the day's real AQI-based health advice for whichever region currently
+  has the worst air quality, using the same advice text already shown
+  on region pages.

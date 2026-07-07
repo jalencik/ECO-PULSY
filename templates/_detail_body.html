@@ -17,10 +17,10 @@
   </section>
 
   <section class="card aqi-card">
-    <h2 class="card-title">{{ t('detail.aqi_title') }}</h2>
+    <h2 class="card-title">{{ t('detail.aqi_title') }} <span class="aqi-abbr">(AQI)</span></h2>
     {% if data.aqi %}
     <div class="aqi-main">
-      <span class="aqi-value {{ data.aqi.css }}-text">{{ data.aqi.value }}</span>
+      <span class="aqi-value {{ data.aqi.css }}-text" title="{{ t('aqi.hint') }}">{{ data.aqi.value }}</span>
       <span class="chip chip-lg {{ data.aqi.css }}">{{ t('aqi.label.' + data.aqi.label) }}</span>
     </div>
     <p class="aqi-advice">{{ t('aqi.advice.' + data.aqi.label) }}</p>
@@ -38,13 +38,40 @@
 
 <section class="card">
   <h2 class="card-title">{{ t('detail.forecast_title', days=data.daily|length) }}</h2>
-  <div class="week-row">
+  {% if data.daily and data.daily[0].hours %}
+  <p class="muted small aqi-hint">{{ t('detail.forecast_hint') }}</p>
+  {% endif %}
+  <div class="day-list">
     {% for d in data.daily %}
-    <div class="day-cell">
-      <span class="day-name">{{ t('weekday.' + d.weekday) }}</span>
-      <svg width="24" height="24"><use href="#i-{{ d.icon }}"/></svg>
-      <span class="day-temps">{{ d.tmax | round | int }}° <small>{{ d.tmin | round | int }}°</small></span>
-      {% if d.rain_prob is not none %}<span class="muted small">{{ d.rain_prob }}%</span>{% endif %}
+    <div class="day-block">
+      {% if d.hours %}
+      <button type="button" class="day-cell" data-day-toggle aria-expanded="false">
+        <span class="day-name">{{ t('weekday.' + d.weekday) }}</span>
+        <svg width="24" height="24"><use href="#i-{{ d.icon }}"/></svg>
+        <span class="day-temps">{{ d.tmax | round | int }}° <small>{{ d.tmin | round | int }}°</small></span>
+        {% if d.rain_prob is not none %}<span class="muted small day-rain">{{ d.rain_prob }}%</span>{% endif %}
+        <svg class="day-chevron" width="16" height="16"><use href="#i-arrow"/></svg>
+      </button>
+      <div class="hour-strip">
+        <div class="hour-strip-inner">
+          {% for h in d.hours %}
+          <div class="hour-cell">
+            <span class="hour-time">{{ h.hour_label }}</span>
+            <svg width="20" height="20"><use href="#i-{{ h.icon }}"/></svg>
+            <span class="hour-temp">{{ h.temp | round | int if h.temp is not none else '–' }}°</span>
+            {% if h.aqi %}<span class="chip hour-aqi-chip {{ h.aqi.css }}" title="{{ t('aqi.hint') }}">{{ h.aqi.value }}</span>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% else %}
+      <div class="day-cell day-cell-static">
+        <span class="day-name">{{ t('weekday.' + d.weekday) }}</span>
+        <svg width="24" height="24"><use href="#i-{{ d.icon }}"/></svg>
+        <span class="day-temps">{{ d.tmax | round | int }}° <small>{{ d.tmin | round | int }}°</small></span>
+        {% if d.rain_prob is not none %}<span class="muted small day-rain">{{ d.rain_prob }}%</span>{% endif %}
+      </div>
+      {% endif %}
     </div>
     {% endfor %}
   </div>

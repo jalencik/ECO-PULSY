@@ -1,0 +1,41 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="maskIllustrationTitle">
+  <title id="maskIllustrationTitle">Child wearing a protective face mask</title>
+
+  <!-- soft blue / green / yellow background blobs -->
+  <circle cx="100" cy="100" r="96" fill="#cfeaf5"/>
+  <circle cx="46" cy="152" r="66" fill="#d8f2df"/>
+  <circle cx="156" cy="42" r="46" fill="#fdf0c0"/>
+
+  <!-- shoulders / hoodie -->
+  <path d="M58 168 Q58 128 100 126 Q142 128 142 168 L142 194 L58 194 Z" fill="#57b894"/>
+  <line x1="92" y1="138" x2="89" y2="162" stroke="#f4c95d" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="108" y1="138" x2="111" y2="162" stroke="#f4c95d" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- hair (base circle, partly covered by the face) -->
+  <circle cx="100" cy="93" r="46" fill="#3a2e26"/>
+  <circle cx="57" cy="104" r="9" fill="#3a2e26"/>
+  <circle cx="143" cy="104" r="9" fill="#3a2e26"/>
+
+  <!-- face -->
+  <circle cx="100" cy="104" r="42" fill="#f0c19a"/>
+
+  <!-- rosy cheeks -->
+  <circle cx="72" cy="114" r="6" fill="#f2a98f" opacity="0.55"/>
+  <circle cx="128" cy="114" r="6" fill="#f2a98f" opacity="0.55"/>
+
+  <!-- eyebrows -->
+  <path d="M76 90 Q84 86 92 90" fill="none" stroke="#3a2e26" stroke-width="3" stroke-linecap="round"/>
+  <path d="M108 90 Q116 86 124 90" fill="none" stroke="#3a2e26" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- eyes -->
+  <circle cx="84" cy="101" r="4.5" fill="#2b2320"/>
+  <circle cx="116" cy="101" r="4.5" fill="#2b2320"/>
+
+  <!-- mask straps -->
+  <line x1="60" y1="108" x2="80" y2="118" stroke="#bcd9e6" stroke-width="4" stroke-linecap="round"/>
+  <line x1="140" y1="108" x2="120" y2="118" stroke="#bcd9e6" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- mask -->
+  <path d="M78 114 Q100 134 122 114 Q123 134 100 141 Q77 134 78 114 Z" fill="#eaf6fb" stroke="#0e5a6d" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M85 122 Q100 128 115 122" fill="none" stroke="#0e5a6d" stroke-width="1.5" opacity="0.45"/>
+</svg>

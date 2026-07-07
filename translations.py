@@ -36,6 +36,7 @@ TRANSLATIONS = {
         "hero.get_started": "Get started",
         "hero.have_account": "I already have an account",
         "hero.fine_print": "Free · No credit card required",
+        "hero.trust_badge": "Trusted by {count}+ users across Uzbekistan",
         "hero.preview_head": "National overview",
         "hero.preview_foot": "Sample preview",
 
@@ -102,6 +103,9 @@ TRANSLATIONS = {
 
         # --- App sidebar / topbar ------------------------------------------------------
         "sidebar.dashboard": "Dashboard",
+        "sidebar.map": "Map",
+        "sidebar.rankings": "Rankings",
+        "sidebar.news": "News",
         "sidebar.regions": "Regions",
         "sidebar.administration": "Administration",
         "sidebar.admin_panel": "Admin panel",
@@ -113,6 +117,37 @@ TRANSLATIONS = {
         "dashboard.avg_pm25": "National average PM2.5",
         "dashboard.cleanest": "Cleanest air right now",
         "dashboard.worst": "Most polluted right now",
+        "dashboard.health_tip_title": "Today's health tip",
+        "dashboard.health_tip_context": "Based on current conditions in {region}",
+
+        # --- Rankings ------------------------------------------------------
+        "rankings.title": "Rankings",
+        "rankings.sub": "All 14 regions compared live - tap a region to rank its districts too",
+        "rankings.tab_hottest": "Hottest",
+        "rankings.tab_polluted": "Most polluted",
+        "rankings.tab_humid": "Most humid",
+        "rankings.tab_windy": "Windiest",
+        "rankings.expand_hint": "Tap a region to rank its districts",
+        "rankings.loading": "Loading districts...",
+        "rankings.load_error": "Couldn't load districts right now. Try again shortly.",
+        "rankings.no_data": "No data available yet.",
+        "rankings.stale_district": "Preview - live data temporarily unavailable for this district",
+
+        # --- News ------------------------------------------------------
+        "news.title": "News",
+        "news.sub": "Air quality and environment headlines, refreshed hourly",
+        "news.unavailable": "News is temporarily unavailable. Please check back shortly.",
+        "news.stale": "Showing the last successfully loaded headlines while live news refreshes.",
+        "news.no_articles": "No matching articles right now. Check back soon.",
+        "news.not_configured": "The news feed isn't connected yet.",
+        "news.attribution": "News via Currents API - each headline links to its original source.",
+
+        # --- Map ------------------------------------------------------
+        "map.title": "Map",
+        "map.sub": "Live air quality across Uzbekistan - hover or tap a marker for details",
+        "map.view_details": "View full details",
+        "map.legend_title": "AQI legend",
+        "map.attribution_note": "Markers mark each region's administrative centre, not a boundary estimate.",
 
         # --- Banners ------------------------------------------------------
         "banner.demo": "Demo data mode is on (DEMO_DATA=1). Values shown are synthetic samples, not live measurements.",
@@ -134,8 +169,10 @@ TRANSLATIONS = {
         "detail.aqi_title": "Air quality index",
         "detail.aqi_unavailable": "AQI unavailable.",
         "detail.aqi_note": "US EPA index, computed from PM2.5",
+        "aqi.hint": "AQI (Air Quality Index)",
         "detail.chart_title": "Next 48 hours - temperature and PM2.5",
         "detail.forecast_title": "{days}-day forecast",
+        "detail.forecast_hint": "Tap a day for its hour-by-hour temperature and AQI",
         "detail.pollutant_title": "Pollutant breakdown",
         "detail.pollutant_col": "Pollutant",
         "detail.concentration_col": "Concentration",
@@ -170,8 +207,9 @@ TRANSLATIONS = {
         "aqi.advice.Very Unhealthy": "Health alert: everyone should avoid prolonged outdoor exertion.",
         "aqi.advice.Hazardous": "Emergency conditions: everyone should stay indoors and keep activity levels low.",
 
-        # --- Admin / Owner panel ------------------------------------------------------
+        # --- Admin / Owner / Queen panel ------------------------------------------------------
         "admin.owner_panel": "Owner panel",
+        "admin.queen_panel": "Queen panel",
         "admin.admin_panel": "Admin panel",
         "admin.platform_accounts": "Platform accounts",
         "admin.and_roles": "and roles",
@@ -179,6 +217,7 @@ TRANSLATIONS = {
         "admin.total_users": "Total users",
         "admin.administrators": "Administrators",
         "admin.all_users_owner": "All users - owner controls",
+        "admin.all_users_queen": "All users - queen controls",
         "admin.all_users": "All users",
         "admin.col_num": "#",
         "admin.col_name": "Name",
@@ -189,7 +228,6 @@ TRANSLATIONS = {
         "admin.edit_tooltip": "Edit user",
         "admin.delete_tooltip": "Delete user",
         "admin.confirm_delete": "Delete {name} permanently?",
-        "admin.demo_badge": "Demo",
         "admin.edit_user_title": "Edit user",
         "admin.owner_controls": "Owner controls",
         "edit.name_label": "Name",
@@ -200,6 +238,7 @@ TRANSLATIONS = {
 
         # --- Roles (keyed by the exact string User.role_label / admin.py produce) -----
         "role.Owner": "Owner",
+        "role.Queen": "Queen",
         "role.Administrator": "Administrator",
         "role.Member": "Member",
 
@@ -228,7 +267,8 @@ TRANSLATIONS = {
         "flash.bad_credentials": "Incorrect email or password.",
         "flash.email_in_use": "That email is already used by another account.",
         "flash.user_updated": "User updated.",
-        "flash.cannot_delete_self": "You cannot delete your own owner account.",
+        "flash.cannot_delete_self": "You cannot delete your own account.",
+        "flash.cannot_delete_owner": "The owner account can't be deleted.",
         "flash.user_deleted": "User deleted.",
     },
 
@@ -250,6 +290,7 @@ TRANSLATIONS = {
         "hero.get_started": "Boshlash",
         "hero.have_account": "Mening hisobim bor",
         "hero.fine_print": "Bepul · Bank kartasi talab qilinmaydi",
+        "hero.trust_badge": "O'zbekiston bo'ylab {count}+ foydalanuvchi bizga ishonadi",
         "hero.preview_head": "Umumiy ko'rinish",
         "hero.preview_foot": "Namunaviy ko'rinish",
 
@@ -316,6 +357,9 @@ TRANSLATIONS = {
 
         # --- App sidebar / topbar ------------------------------------------------------
         "sidebar.dashboard": "Boshqaruv paneli",
+        "sidebar.map": "Xarita",
+        "sidebar.rankings": "Reyting",
+        "sidebar.news": "Yangiliklar",
         "sidebar.regions": "Viloyatlar",
         "sidebar.administration": "Boshqaruv",
         "sidebar.admin_panel": "Admin panel",
@@ -327,6 +371,37 @@ TRANSLATIONS = {
         "dashboard.avg_pm25": "O'rtacha milliy PM2.5",
         "dashboard.cleanest": "Hozirda eng toza havo",
         "dashboard.worst": "Hozirda eng ifloslangan havo",
+        "dashboard.health_tip_title": "Bugungi salomatlik maslahati",
+        "dashboard.health_tip_context": "{region} dagi joriy sharoitlarga asoslanib",
+
+        # --- Rankings ------------------------------------------------------
+        "rankings.title": "Reyting",
+        "rankings.sub": "Barcha 14 viloyat jonli taqqoslanadi - tumanlar reytingini ko'rish uchun viloyatni bosing",
+        "rankings.tab_hottest": "Eng issiq",
+        "rankings.tab_polluted": "Eng ifloslangan",
+        "rankings.tab_humid": "Eng nam",
+        "rankings.tab_windy": "Eng shamolli",
+        "rankings.expand_hint": "Tumanlar reytingini ko'rish uchun viloyatni bosing",
+        "rankings.loading": "Tumanlar yuklanmoqda...",
+        "rankings.load_error": "Tumanlarni hozircha yuklab bo'lmadi. Birozdan so'ng qayta urinib ko'ring.",
+        "rankings.no_data": "Hozircha ma'lumot mavjud emas.",
+        "rankings.stale_district": "Ko'rib chiqish - bu tuman uchun jonli ma'lumot vaqtincha mavjud emas",
+
+        # --- News ------------------------------------------------------
+        "news.title": "Yangiliklar",
+        "news.sub": "Havo sifati va atrof-muhitga oid yangiliklar, har soatda yangilanadi",
+        "news.unavailable": "Yangiliklar vaqtincha mavjud emas. Birozdan so'ng qayta tekshiring.",
+        "news.stale": "Jonli yangiliklar yangilanayotgan vaqtda so'nggi muvaffaqiyatli yuklangan sarlavhalar ko'rsatilmoqda.",
+        "news.no_articles": "Hozircha mos maqolalar yo'q. Tez orada qayta tekshiring.",
+        "news.not_configured": "Yangiliklar manbai hali ulanmagan.",
+        "news.attribution": "Yangiliklar Currents API orqali - har bir sarlavha asl manbaga havola qiladi.",
+
+        # --- Map ------------------------------------------------------
+        "map.title": "Xarita",
+        "map.sub": "O'zbekiston bo'ylab jonli havo sifati - tafsilotlar uchun belgini bosing yoki uning ustiga kursorni olib boring",
+        "map.view_details": "To'liq ma'lumotlarni ko'rish",
+        "map.legend_title": "AQI belgilari",
+        "map.attribution_note": "Belgilar har bir viloyatning ma'muriy markazini bildiradi, chegara taxminini emas.",
 
         # --- Banners ------------------------------------------------------
         "banner.demo": "Demo ma'lumot rejimi yoqilgan (DEMO_DATA=1). Ko'rsatilgan qiymatlar sun'iy namunalar, jonli o'lchovlar emas.",
@@ -348,8 +423,10 @@ TRANSLATIONS = {
         "detail.aqi_title": "Havo sifati indeksi",
         "detail.aqi_unavailable": "AQI mavjud emas.",
         "detail.aqi_note": "AQSh EPA indeksi, PM2.5 asosida hisoblangan",
+        "aqi.hint": "AQI (Havo sifati indeksi)",
         "detail.chart_title": "Keyingi 48 soat - harorat va PM2.5",
         "detail.forecast_title": "{days} kunlik prognoz",
+        "detail.forecast_hint": "Soatlik harorat va AQI uchun kunni bosing",
         "detail.pollutant_title": "Ifloslantiruvchi moddalar taqsimoti",
         "detail.pollutant_col": "Ifloslantiruvchi modda",
         "detail.concentration_col": "Konsentratsiya",
@@ -383,8 +460,9 @@ TRANSLATIONS = {
         "aqi.advice.Very Unhealthy": "Sog'liq bo'yicha ogohlantirish: barcha odamlar uzoq muddatli tashqi jismoniy faoliyatdan saqlanishi kerak.",
         "aqi.advice.Hazardous": "Favqulodda holat: barcha odamlar uy ichida qolishi va faollikni pasaytirishi kerak.",
 
-        # --- Admin / Owner panel ------------------------------------------------------
+        # --- Admin / Owner / Queen panel ------------------------------------------------------
         "admin.owner_panel": "Egasi paneli",
+        "admin.queen_panel": "Qirolicha paneli",
         "admin.admin_panel": "Admin panel",
         "admin.platform_accounts": "Platforma hisoblari",
         "admin.and_roles": "va rollari",
@@ -392,6 +470,7 @@ TRANSLATIONS = {
         "admin.total_users": "Jami foydalanuvchilar",
         "admin.administrators": "Administratorlar",
         "admin.all_users_owner": "Barcha foydalanuvchilar - egasi nazorati",
+        "admin.all_users_queen": "Barcha foydalanuvchilar - qirolicha nazorati",
         "admin.all_users": "Barcha foydalanuvchilar",
         "admin.col_num": "#",
         "admin.col_name": "Ism",
@@ -402,7 +481,6 @@ TRANSLATIONS = {
         "admin.edit_tooltip": "Foydalanuvchini tahrirlash",
         "admin.delete_tooltip": "Foydalanuvchini o'chirish",
         "admin.confirm_delete": "{name} butunlay o'chirib tashlansinmi?",
-        "admin.demo_badge": "Demo",
         "admin.edit_user_title": "Foydalanuvchini tahrirlash",
         "admin.owner_controls": "Egasi nazorati",
         "edit.name_label": "Ism",
@@ -413,6 +491,7 @@ TRANSLATIONS = {
 
         # --- Roles ------------------------------------------------------
         "role.Owner": "Egasi",
+        "role.Queen": "Qirolicha",
         "role.Administrator": "Administrator",
         "role.Member": "A'zo",
 
@@ -441,7 +520,8 @@ TRANSLATIONS = {
         "flash.bad_credentials": "Elektron pochta yoki parol noto'g'ri.",
         "flash.email_in_use": "Ushbu elektron pochtadan boshqa hisobda foydalanilmoqda.",
         "flash.user_updated": "Foydalanuvchi yangilandi.",
-        "flash.cannot_delete_self": "O'zingizning egasi hisobingizni o'chira olmaysiz.",
+        "flash.cannot_delete_self": "O'zingizning hisobingizni o'chira olmaysiz.",
+        "flash.cannot_delete_owner": "Egasi hisobini o'chirib bo'lmaydi.",
         "flash.user_deleted": "Foydalanuvchi o'chirildi.",
     },
 }

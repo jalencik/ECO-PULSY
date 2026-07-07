@@ -268,20 +268,35 @@ def _compose_detail(payload):
     aq = cur.get("air_quality", {})
     pm25 = aq.get("pm2_5")
 
-    # Flatten hourly forecast into a 48-hour series for the chart.
+    # Flatten hourly forecast into a 48-hour series for the trend chart,
+    # and keep each day's full real hourly breakdown too (24 real
+    # WeatherAPI hours per day, for the expandable hourly forecast view -
+    # nothing here is interpolated or invented).
     hours, temps, pm_series = [], [], []
-    for day in payload.get("forecast", {}).get("forecastday", []):
-        for h in day.get("hour", []):
-            hours.append(h.get("time"))
-            temps.append(h.get("temp_c"))
-            hp = h.get("air_quality", {}).get("pm2_5")
-            pm_series.append(round(hp, 1) if hp is not None else None)
-    hours, temps, pm_series = hours[:48], temps[:48], pm_series[:48]
-
     days = []
     for day in payload.get("forecast", {}).get("forecastday", []):
         d = day.get("day", {})
         d_label, d_icon = describe_weather(d.get("condition", {}).get("code"))
+
+        day_hours = []
+        for h in day.get("hour", []):
+            hp = h.get("air_quality", {}).get("pm2_5")
+            hours.append(h.get("time"))
+            temps.append(h.get("temp_c"))
+            pm_series.append(round(hp, 1) if hp is not None else None)
+
+            h_label, h_icon = describe_weather(h.get("condition", {}).get("code"))
+            time_str = h.get("time") or ""
+            day_hours.append({
+                "hour_label": time_str[-5:] if len(time_str) >= 5 else time_str,
+                "temp": h.get("temp_c"),
+                "label": h_label,
+                "icon": h_icon,
+                "pm25": round(hp, 1) if hp is not None else None,
+                "aqi": pm25_to_aqi(hp),
+                "rain_prob": h.get("chance_of_rain"),
+            })
+
         days.append({
             "date": day.get("date"),
             "weekday": datetime.fromisoformat(day["date"]).strftime("%a"),
@@ -290,7 +305,9 @@ def _compose_detail(payload):
             "rain_prob": d.get("daily_chance_of_rain"),
             "label": d_label,
             "icon": d_icon,
+            "hours": day_hours,
         })
+    hours, temps, pm_series = hours[:48], temps[:48], pm_series[:48]
 
     pollutants = [
         ("PM2.5", round(pm25, 1) if pm25 is not None else None, "ug/m3"),
@@ -355,6 +372,14 @@ def _demo_region_detail(slug):
         "tmax": round(30 + 8 * rng.random(), 1), "tmin": round(18 + 6 * rng.random(), 1),
         "rain_prob": rng.randint(0, 40),
         "label": "Clear", "icon": "sun",
+        "hours": [{
+            "hour_label": f"{h:02d}:00",
+            "temp": round(20 + 12 * rng.random(), 1),
+            "label": "Clear", "icon": "sun",
+            "pm25": round(10 + 40 * rng.random(), 1),
+            "aqi": pm25_to_aqi(round(10 + 40 * rng.random(), 1)),
+            "rain_prob": rng.randint(0, 30),
+        } for h in range(24)],
     } for i in range(3)]
     return {
         "error": False, "demo": True,

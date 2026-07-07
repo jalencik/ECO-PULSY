@@ -61,6 +61,7 @@ def create_app(config_class=Config):
         db.create_all()
         _ensure_user_columns()   # add new profile columns to an existing table
         _promote_owner(app)      # make OWNER_EMAIL the owner
+        _promote_queen(app)      # make QUEEN_EMAIL the queen
         try:
             _seed_locations()
         except Exception:
@@ -113,7 +114,10 @@ def _configure_security_headers(app):
         "script-src 'self' https://cdn.jsdelivr.net; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
         "font-src https://fonts.gstatic.com; "
-        "img-src 'self' data:; "
+        # News thumbnails come from whatever CDN each article's source
+        # site uses - an unpredictable set of third-party domains - so
+        # image-src is opened to any HTTPS host rather than a fixed list.
+        "img-src 'self' data: https:; "
         "connect-src 'self'; "
         "frame-ancestors 'none'"
     )
@@ -243,55 +247,97 @@ def _promote_owner(app):
         db.session.rollback()
 
 
-def _seed_locations():
-    """Load data/districts.json into the locations table (idempotent).
+def _promote_queen(app):
+    """Ensure the configured QUEEN_EMAIL holds the 'queen' role.
 
-    Runs only when the table is empty, so restarts and redeploys are safe
-    and the 173 districts are inserted exactly once.
+    Safety net for an account that already existed under a different
+    role before QUEEN_EMAIL was set/changed - normal registrations are
+    already assigned "queen" immediately in auth.py.
+    """
+    from models import User
+
+    email = app.config.get("QUEEN_EMAIL", "")
+    if not email:
+        return
+    try:
+        user = User.query.filter_by(email=email).first()
+        if user is not None and user.role not in ("owner", "queen"):
+            user.role = "queen"
+            db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+
+def _seed_locations():
+    """Load data/districts.json into the locations table.
+
+    Purely additive: only inserts (region, district) pairs from the
+    dataset that aren't already in the table, and never touches or
+    deletes an existing row. That matters because /locations/<id> is a
+    plain numeric id with no stable natural key of its own - resyncing
+    by wipe-and-recreate would silently change what id every existing
+    district points to. Additive-only means a dataset fix (like adding
+    a missing district) reaches an already-seeded production database
+    on the next normal redeploy, safely.
     """
     from models import Location
-
-    if Location.query.count() > 0:
-        return 0
 
     dataset = Path(__file__).parent / "data" / "districts.json"
     if not dataset.exists():
         return 0
 
     data = json.loads(dataset.read_text(encoding="utf-8"))
+    existing = {(row.region_name, row.district_name) for row in Location.query.all()}
+
     count = 0
     for region_name, districts in data.items():
         for district in districts:
+            key = (region_name, district["name"])
+            if key in existing:
+                continue
             db.session.add(Location(
                 region_name=region_name,
                 district_name=district["name"],
                 latitude=district["lat"],
                 longitude=district["lon"],
             ))
+            existing.add(key)
             count += 1
     db.session.commit()
     return count
 
 
 def _seed_fake_members():
-    """Insert 300 clearly-marked demo member accounts (idempotent, once).
+    """Insert 300 clearly-marked demo member accounts, resyncing them
+    whenever the generator in services/fake_members.py changes.
 
     These are NOT real people:
     - role is always "user" and is_fake is always True
     - the password is a random value generated and discarded on the
       spot, so the account can never be used to sign in
     - admin.py filters is_fake accounts out entirely for plain admins
-      (real count and rows only); only the owner's panel folds them
-      into the combined total, each flagged with a "Demo" badge.
-    Runs once total (checked via is_fake existing anywhere), so redeploys
-    never add a second batch.
-    """
-    from models import User
+      (real count and rows only); the owner and the Queen fold them
+      into the combined total instead.
 
-    if User.query.filter_by(is_fake=True).first() is not None:
+    A one-row marker in the snapshots table records which
+    fake_members.DATASET_VERSION is currently live. On boot, if that
+    doesn't match the version in code, every is_fake row is deleted and
+    regenerated from scratch - this is how a generator change (bigger,
+    more diverse name/email pools) actually reaches an already-seeded
+    production database instead of being silently skipped forever.
+    Real user rows (is_fake=False) are never touched or deleted.
+    """
+    from models import Snapshot, User
+    from services.fake_members import DATASET_VERSION, generate_fake_members
+
+    marker = db.session.get(Snapshot, "fake_members_version")
+    up_to_date = marker is not None and marker.payload.get("version") == DATASET_VERSION
+    if up_to_date and User.query.filter_by(is_fake=True).first() is not None:
         return 0
 
-    from services.fake_members import generate_fake_members
+    # Wipe any previous batch (old repetitive names, older seed, etc.)
+    # before regenerating so this stays a clean resync, not an add-on.
+    User.query.filter_by(is_fake=True).delete(synchronize_session=False)
 
     existing_emails = {row[0] for row in db.session.query(User.email).all()}
     count = 0
@@ -307,6 +353,12 @@ def _seed_fake_members():
         db.session.add(user)
         existing_emails.add(person["email"])
         count += 1
+
+    if marker is None:
+        db.session.add(Snapshot(key="fake_members_version", payload={"version": DATASET_VERSION}))
+    else:
+        marker.payload = {"version": DATASET_VERSION}
+
     db.session.commit()
     return count
 
@@ -357,15 +409,15 @@ def _register_cli(app):
 
     @app.cli.command("seed-locations")
     def seed_locations():
-        """Insert the 173-district dataset (skips if already seeded)."""
+        """Insert any districts from data/districts.json not already saved."""
         count = _seed_locations()
-        click.echo(f"Inserted {count} locations." if count else "Locations already seeded.")
+        click.echo(f"Inserted {count} new locations." if count else "Locations already up to date.")
 
     @app.cli.command("seed-fake-members")
     def seed_fake_members():
-        """Insert the 300 demo member accounts (skips if already seeded)."""
+        """Insert or resync the 300 demo member accounts."""
         count = _seed_fake_members()
-        click.echo(f"Inserted {count} demo members." if count else "Demo members already seeded.")
+        click.echo(f"Inserted {count} demo members." if count else "Demo members already up to date.")
 
 
 app = create_app()

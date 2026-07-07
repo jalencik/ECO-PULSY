@@ -33,6 +33,16 @@
     });
   }
 
+  // --- Expandable hourly forecast (region/location detail pages) -----------
+  document.querySelectorAll("[data-day-toggle]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var strip = btn.nextElementSibling;
+      if (!strip || !strip.classList.contains("hour-strip")) return;
+      var open = strip.classList.toggle("open");
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  });
+
   // --- CSP-safe confirm dialogs (replaces inline onsubmit) ------------------
   document.querySelectorAll("form[data-confirm]").forEach(function (form) {
     form.addEventListener("submit", function (event) {

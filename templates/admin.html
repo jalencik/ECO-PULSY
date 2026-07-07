@@ -1,7 +1,7 @@
 {% extends "app_base.html" %}
 {% block title %}Admin panel — EcoPulse{% endblock %}
-{% block page_title %}{{ t('admin.owner_panel') if is_owner else t('admin.admin_panel') }}{% endblock %}
-{% block page_sub %}{{ t('admin.platform_accounts') }}{% if is_owner %} {{ t('admin.and_roles') }}{% endif %} · <a href="{{ url_for('admin.diagnostics') }}">{{ t('admin.run_diagnostics') }}</a>{% endblock %}
+{% block page_title %}{% if is_owner %}{{ t('admin.owner_panel') }}{% elif is_queen %}{{ t('admin.queen_panel') }}{% else %}{{ t('admin.admin_panel') }}{% endif %}{% endblock %}
+{% block page_sub %}{{ t('admin.platform_accounts') }}{% if can_manage %} {{ t('admin.and_roles') }}{% endif %} · <a href="{{ url_for('admin.diagnostics') }}">{{ t('admin.run_diagnostics') }}</a>{% endblock %}
 
 {% block main %}
 {% include "_flash.html" %}
@@ -19,13 +19,15 @@
 </div>
 
 <section class="card">
-  <h2 class="card-title">{{ t('admin.all_users_owner') if is_owner else t('admin.all_users') }}</h2>
+  <h2 class="card-title">
+    {% if is_owner %}{{ t('admin.all_users_owner') }}{% elif is_queen %}{{ t('admin.all_users_queen') }}{% else %}{{ t('admin.all_users') }}{% endif %}
+  </h2>
   <div class="table-scroll">
   <table class="table">
     <thead>
       <tr>
         <th>{{ t('admin.col_num') }}</th><th>{{ t('admin.col_name') }}</th><th>{{ t('admin.col_email') }}</th><th>{{ t('admin.col_role') }}</th><th>{{ t('admin.col_joined') }}</th>
-        {% if is_owner %}<th>{{ t('admin.col_manage') }}</th>{% endif %}
+        {% if can_manage %}<th>{{ t('admin.col_manage') }}</th>{% endif %}
       </tr>
     </thead>
     <tbody>
@@ -36,15 +38,14 @@
         <td>{{ row.user.email }}</td>
         <td>
           <span class="role-badge {{ 'role-admin' if row.badge else 'role-user' }}">{{ t('role.' + row.role_label) }}</span>
-          {% if is_owner and row.is_fake %}<span class="role-badge role-fake" title="Only you can see this - regular admins see the real user count only">{{ t('admin.demo_badge') }}</span>{% endif %}
         </td>
         <td>{{ row.user.created_at.strftime('%d %b %Y') }}</td>
-        {% if is_owner %}
+        {% if can_manage %}
         <td class="row-actions">
           <a class="icon-btn" href="{{ url_for('admin.edit_user', user_id=row.user.id) }}" title="{{ t('admin.edit_tooltip') }}">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
           </a>
-          {% if row.user.id != current_user.id %}
+          {% if row.user.id != current_user.id and not row.user.is_owner %}
           <form method="post" action="{{ url_for('admin.delete_user', user_id=row.user.id) }}"
                 data-confirm="{{ t('admin.confirm_delete', name=row.user.name) }}">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
