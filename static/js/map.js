@@ -49,9 +49,22 @@
   var map = L.map(canvas, {
     scrollWheelZoom: false, // enabled on hover/touch below, so it never hijacks page scroll
     touchZoom: true,        // pinch-to-zoom on phones/tablets (Leaflet default, set explicitly)
-    tap: true,
+    // Leaflet's legacy "tap" shim re-synthesizes click events from
+    // touchstart/touchend to work around a 300ms-delay bug in iOS Safari
+    // ~10 years ago. Every modern mobile browser fires real click events
+    // on tap without that delay, and this shim's own event replay can
+    // itself swallow or double-fire a genuine tap - real-device testing
+    // here showed marker taps intermittently doing nothing at all with
+    // it enabled. Leaving it off lets native tap/click events through
+    // untouched, which is what makes marker taps reliable on phones.
+    tap: false,
     maxBounds: UZ_BOUNDS,
-    maxBoundsViscosity: 1.0, // "solid" edge - panning stops firmly at the border
+    // A fully "solid" (1.0) edge also blocks Leaflet's own autoPan from
+    // nudging the map when a popup near the border would otherwise open
+    // partly outside the map card and get clipped by its rounded-corner
+    // overflow. 0.8 keeps dragging from drifting off-country while still
+    // leaving autoPan enough give to fully reveal an edge popup.
+    maxBoundsViscosity: 0.8,
     minZoom: 5,
   });
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -69,26 +82,41 @@
 
   var bounds = [];
 
+  // Touch devices have no hover, and Leaflet opens a click-bound tooltip
+  // AND a click-bound popup from the exact same tap - two overlapping
+  // copies of the same card fighting for the touch, which is what made
+  // this map feel broken on phones. Hover tooltips are desktop-only;
+  // touch always gets a single clean tap-to-open popup.
+  var canHover = !L.Browser.touch;
+  var markerRadius = L.Browser.touch ? 19 : 11;
+  // Cap how wide a popup card can render relative to the map's own
+  // width - on a narrow phone a fixed 210-320px popup can be wider than
+  // the map itself, which is what forces a large autoPan (or clips) near
+  // any edge. Keeping it a bit narrower than the canvas means most
+  // popups fit without needing to pan the map at all.
+  var popupMaxWidth = Math.max(190, Math.min(300, canvas.clientWidth - 40));
+
   markers.forEach(function (m) {
     if (m.lat == null || m.lon == null) return;
     bounds.push([m.lat, m.lon]);
 
     var color = m.aqi ? (AQI_COLORS[m.aqi.css] || NEUTRAL_COLOR) : NEUTRAL_COLOR;
     var marker = L.circleMarker([m.lat, m.lon], {
-      radius: 11,
+      radius: markerRadius,
       color: "#fff",
       weight: 2,
       fillColor: color,
       fillOpacity: 0.92,
     }).addTo(map);
 
-    // Rich card on hover (desktop) via a tooltip, and the same card on
-    // tap via a popup (touch devices, and anyone who prefers to click)
-    // - two independent DOM trees since each binding owns its own node.
-    marker.bindTooltip(buildPopup(m), {
-      direction: "top", offset: [0, -12], interactive: true, className: "map-tooltip-rich",
+    if (canHover) {
+      marker.bindTooltip(buildPopup(m), {
+        direction: "top", offset: [0, -12], interactive: true, className: "map-tooltip-rich",
+      });
+    }
+    marker.bindPopup(buildPopup(m), {
+      className: "map-popup-wrap", autoPanPadding: [24, 24], maxWidth: popupMaxWidth,
     });
-    marker.bindPopup(buildPopup(m), { className: "map-popup-wrap" });
   });
 
   // District pins: every one of the 173 districts, clustered so the map
@@ -103,16 +131,20 @@
       spiderfyOnMaxZoom: true,
       disableClusteringAtZoom: 11,
     });
+    // The visible dot stays a small 9px so the map doesn't look cluttered,
+    // but the tappable icon box itself is larger on touch devices (a 9px
+    // target is well under the ~44px minimum comfortable touch size).
+    var iconBox = L.Browser.touch ? 30 : 10;
     var districtIcon = L.divIcon({
       className: "map-district-icon",
       html: '<span class="map-district-dot"></span>',
-      iconSize: [10, 10],
-      iconAnchor: [5, 5],
+      iconSize: [iconBox, iconBox],
+      iconAnchor: [iconBox / 2, iconBox / 2],
     });
     districts.forEach(function (d) {
       if (d.lat == null || d.lon == null) return;
       var pin = L.marker([d.lat, d.lon], { icon: districtIcon });
-      pin.bindTooltip(d.name, { direction: "top", offset: [0, -4] });
+      if (canHover) pin.bindTooltip(d.name, { direction: "top", offset: [0, -4] });
       pin.on("click", function () { window.location.href = "/locations/" + d.id; });
       clusterGroup.addLayer(pin);
     });

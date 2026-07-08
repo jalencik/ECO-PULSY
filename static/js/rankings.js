@@ -37,7 +37,9 @@
   }
 
   function chipClass(metric, d) {
-    return metric === "polluted" && d.aqi ? d.aqi.css : "chip-neutral";
+    if (metric === "polluted" && d.aqi) return d.aqi.css;
+    if (metric === "hottest") return "chip-hot";
+    return "chip-neutral";
   }
 
   function renderSkeleton(container) {

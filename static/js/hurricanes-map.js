@@ -17,7 +17,10 @@
   var NEUTRAL_COLOR = "#8a97a0";
 
   var map = L.map(canvas, {
-    scrollWheelZoom: false, touchZoom: true, tap: true, minZoom: 2,
+    // tap:true is Leaflet's legacy iOS-Safari click shim; on modern
+    // touchscreens it can swallow or double-fire real taps (see map.js
+    // for the full explanation) so it's left off.
+    scrollWheelZoom: false, touchZoom: true, tap: false, minZoom: 2,
   });
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors",

@@ -177,6 +177,10 @@ TRANSLATIONS = {
         "hurricanes.alert.green": "Green",
         "hurricanes.alert.orange": "Orange",
         "hurricanes.alert.red": "Red",
+        "hurricanes.total_label": "Tracked (last 45 days)",
+        "hurricanes.red_label": "Red alerts",
+        "hurricanes.orange_label": "Orange alerts",
+        "hurricanes.green_label": "Green alerts",
 
         # --- Banners ------------------------------------------------------
         "banner.demo": "Demo data mode is on (DEMO_DATA=1). Values shown are synthetic samples, not live measurements.",
@@ -471,6 +475,10 @@ TRANSLATIONS = {
         "hurricanes.alert.green": "Yashil",
         "hurricanes.alert.orange": "To'q sariq",
         "hurricanes.alert.red": "Qizil",
+        "hurricanes.total_label": "Kuzatilmoqda (so'nggi 45 kun)",
+        "hurricanes.red_label": "Qizil ogohlantirish",
+        "hurricanes.orange_label": "To'q sariq ogohlantirish",
+        "hurricanes.green_label": "Yashil ogohlantirish",
 
         # --- Banners ------------------------------------------------------
         "banner.demo": "Demo ma'lumot rejimi yoqilgan (DEMO_DATA=1). Ko'rsatilgan qiymatlar sun'iy namunalar, jonli o'lchovlar emas.",

@@ -278,7 +278,14 @@ def wildfires():
 def hurricanes():
     """Recent/active tropical cyclones worldwide, from GDACS (see
     services/hurricanes.py). Real events only."""
-    return render_template("hurricanes.html", hurricanes=hurricanes_service.get_hurricanes())
+    data = hurricanes_service.get_hurricanes()
+    storms = data.get("storms") or []
+    counts = {"red": 0, "orange": 0, "green": 0}
+    for s in storms:
+        level = s.get("alert_level")
+        if level in counts:
+            counts[level] += 1
+    return render_template("hurricanes.html", hurricanes=data, counts=counts)
 
 
 # ---------------------------------------------------------------------------

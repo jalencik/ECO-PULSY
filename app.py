@@ -47,6 +47,7 @@ def create_app(config_class=Config):
     _configure_security_headers(app)
     _configure_compression(app)
     _configure_i18n(app)
+    _configure_static_cache_busting(app)
     _register_error_pages(app)
     _register_cli(app)
 
@@ -195,6 +196,33 @@ def _configure_compression(app):
         response.headers["Content-Encoding"] = "gzip"
         response.headers["Vary"] = "Accept-Encoding"
         return response
+
+
+def _configure_static_cache_busting(app):
+    """Make every `url_for('static', filename=...)` carry a `?v=<mtime>`.
+
+    /static/* is served with a week-long browser Cache-Control (see
+    SEND_FILE_MAX_AGE_DEFAULT in config.py) so repeat visits don't
+    re-download unchanged CSS/JS - good for speed, but it also means a
+    phone that already cached, say, static/js/map.js could keep serving
+    that week-old copy for up to 7 days after a deploy that fixed a bug
+    in it, even across normal page loads. Appending the file's own last-
+    modified time to the URL makes a changed file get a brand new URL the
+    instant it changes, so the stale cache entry is simply never reused -
+    the browser fetches the new file immediately, no waiting out the
+    week, no manual hard-refresh needed. Unchanged files keep the same
+    URL and stay cached exactly as before.
+    """
+
+    @app.url_defaults
+    def add_static_version(endpoint, values):
+        if endpoint != "static" or "filename" not in values:
+            return
+        path = os.path.join(app.static_folder, values["filename"])
+        try:
+            values["v"] = int(os.path.getmtime(path))
+        except OSError:
+            pass
 
 
 # Columns added after the users table already existed in production.

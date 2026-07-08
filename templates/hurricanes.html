@@ -17,6 +17,29 @@
   {% endif %}
 
   {% if hurricanes.storms %}
+  <div class="stat-row stat-row-4">
+    <div class="stat-card">
+      <span class="stat-icon"><svg width="20" height="20"><use href="#i-cyclone"/></svg></span>
+      <span class="stat-label">{{ t('hurricanes.total_label') }}</span>
+      <span class="stat-value">{{ hurricanes.storms | length }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon stat-icon-alert-red"><svg width="20" height="20"><use href="#i-activity"/></svg></span>
+      <span class="stat-label">{{ t('hurricanes.red_label') }}</span>
+      <span class="stat-value">{{ counts.red }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon stat-icon-alert-orange"><svg width="20" height="20"><use href="#i-activity"/></svg></span>
+      <span class="stat-label">{{ t('hurricanes.orange_label') }}</span>
+      <span class="stat-value">{{ counts.orange }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon stat-icon-alert-green"><svg width="20" height="20"><use href="#i-activity"/></svg></span>
+      <span class="stat-label">{{ t('hurricanes.green_label') }}</span>
+      <span class="stat-value">{{ counts.green }}</span>
+    </div>
+  </div>
+
   <section class="card map-card">
     <div id="hurricane-map-canvas" role="application" aria-label="{{ t('hurricanes.title') }}"></div>
   </section>
