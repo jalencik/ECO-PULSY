@@ -227,3 +227,130 @@ you want to change who holds the rank.
   the day's real AQI-based health advice for whichever region currently
   has the worst air quality, using the same advice text already shown
   on region pages.
+
+---
+
+# Update v9 — bug fixes, speed, Wildfires + Hurricanes, forecast redesign
+
+## Push the code
+
+```
+git add .
+```
+```
+git commit -m "v9: bug fixes, performance, wildfires/hurricanes, forecast redesign, UV/sunrise-sunset"
+```
+```
+git push origin main
+```
+
+## One new environment variable (optional but recommended)
+
+Wildfires needs a free NASA FIRMS key or it shows a clean "not
+configured" message — nothing else breaks without it.
+
+| Key | Value |
+|---|---|
+| `FIRMS_MAP_KEY` | your free key from https://firms.modaps.eosdis.nasa.gov/api/map_key/ (instant signup, no card) |
+
+Render → your service → **Environment** → add it → **Manual Deploy →
+Deploy latest commit**. Hurricanes needs no key at all (GDACS is a
+free, open UN/EU disaster feed).
+
+## Bug fixes
+
+- **Queen visibility.** She now sees every other administrator as a
+  plain Member (same as a regular admin sees them) — only the Owner
+  and herself are ever shown truthfully. Admin count stays fixed at 2
+  for both her and plain admins, as before.
+- **Queen's role dropdown** now only offers Member/Administrator —
+  she can no longer assign Owner or Queen, enforced both in the form
+  and on the server.
+- **Rankings "Loading districts…" hang.** The district expand was
+  fetching each district's weather one at a time (a dozen+ sequential
+  calls, 10-20+ seconds on a cold region) — it now fetches all of a
+  region's districts concurrently, so it loads in roughly one
+  round-trip's time regardless of how many districts the region has.
+  District order was already correct; it just couldn't finish loading.
+- **Region/district search box on Rankings/News/Map.** The dropdown
+  now renders itself attached to the page body instead of nested
+  inside the topbar, so it can no longer end up visually clipped or
+  covered by a page's own content — and it now shows properly
+  translated region names in Uzbek instead of raw English ones.
+
+## Map improvements
+
+- Panning/zooming is now bounded to Uzbekistan instead of drifting
+  into neighbouring countries.
+- Trackpad pinch-to-zoom and touch pinch-to-zoom both work now
+  (previously only worked partially); regular page scrolling past the
+  map is untouched — zoom only activates once your cursor/finger is
+  actually on the map.
+- Every one of the 173 districts is now on the map too, as small
+  clustered pins (grouped into count-bubbles until you zoom in, so it
+  never looks cluttered) — tap one to open that district's real page.
+  These pins are deliberately not colour-coded like the 14 region
+  markers: doing that honestly would need 173 extra live weather
+  calls, so instead they're plain navigation shortcuts to each
+  district's own real numbers.
+- Map popups now show a small round mood-face icon next to the AQI
+  number (matching your reference screenshot), colour-matched to the
+  same AQI band as the number beside it.
+
+## Speed
+
+- Admin/Owner/Queen user table is now paginated (50/page) with real
+  database COUNT queries for the totals, instead of loading and
+  rendering all 600+ rows on every visit.
+- The region picker's dropdown data is now cached in your browser for
+  5 minutes (it barely changes) instead of being re-fetched on every
+  single page.
+- Rankings shows an animated skeleton placeholder instead of a static
+  "Loading…" line while a district expand is in flight.
+- The one real N+1-style bottleneck in the app (Rankings' per-district
+  fetch) is now concurrent, described above.
+
+## New: Wildfires and Hurricanes sections
+
+Researched real, free, non-hallucinated data sources and confirmed the
+choice with you before building: **NASA FIRMS** for wildfires (the
+same near-real-time satellite hotspot data most real wildfire-tracking
+sites use) and **GDACS** for hurricanes/cyclones (a free UN/EU global
+disaster feed covering every ocean, not just the Atlantic). Both show
+clear "unavailable"/"stale" states on a failed fetch and never invent
+a fire or a storm. Wildfires shows the true 24-hour worldwide count
+plus a map of the most intense recent detections; Hurricanes shows a
+map and list of storms from the last 45 days with GDACS's own
+alert-level colour and a link to the full report for each.
+
+## Forecast card redesign
+
+- Daily forecast rows now also show that day's AQI (averaged honestly
+  from its own real hourly PM2.5 readings) and wind speed, matching
+  the layout style you referenced.
+- Hourly forecast (inside each expanded day) now also shows wind speed
+  with a small arrow rotated to the real wind direction for that hour.
+- Current-weather card now includes UV index (with its standard
+  Low/Moderate/High/Very High/Extreme category) and sunrise/sunset —
+  all straight from WeatherAPI's own data, fitted into the existing
+  card without disturbing the layout on narrow screens.
+- The AQI card now includes a small illustrated character next to the
+  advice text, whose colour and pose change with the AQI band (calm
+  and unmasked when Good, increasingly concerned and masked as it
+  worsens).
+- Sun/cloud/rain/snow/storm icons now animate subtly and continuously
+  across the app (a slow sun rotation, gentle cloud drift, falling
+  rain, drifting snow, flickering storm) — respects
+  prefers-reduced-motion for anyone who's asked their device to limit
+  motion.
+- Theme now defaults to light before you sign in (landing, sign in,
+  sign up) and dark once you're signed in, the first time a device
+  visits with no saved preference. The moon/sun toggle still always
+  wins once you've used it — your choice is remembered exactly like
+  before.
+- News now searches air-pollution-specific terms first (air pollution,
+  PM2.5, smog, particulate matter, haze) and only fills any remaining
+  slots with broader environment/climate stories, so the page leans
+  toward air pollution whenever there's enough real coverage that day.
+  Articles without a photo now show a small branded EcoPulse graphic
+  instead of a bare grey box.

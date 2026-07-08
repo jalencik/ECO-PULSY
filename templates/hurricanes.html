@@ -1,0 +1,47 @@
+{% extends "app_base.html" %}
+{% block title %}{{ t('hurricanes.title') }} — EcoPulse{% endblock %}
+{% block page_title %}{{ t('hurricanes.title') }}{% endblock %}
+{% block page_sub %}{{ t('hurricanes.sub') }}{% endblock %}
+
+{% block page_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" defer></script>
+{% endblock %}
+
+{% block main %}
+{% if hurricanes.error and not hurricanes.storms %}
+  <div class="banner banner-error">{{ t('hurricanes.unavailable') }}</div>
+{% else %}
+  {% if hurricanes.stale %}
+    <div class="banner banner-info">{{ t('hurricanes.stale') }}</div>
+  {% endif %}
+
+  {% if hurricanes.storms %}
+  <section class="card map-card">
+    <div id="hurricane-map-canvas" role="application" aria-label="{{ t('hurricanes.title') }}"></div>
+  </section>
+
+  <div class="storm-list">
+    {% for s in hurricanes.storms %}
+    <a class="storm-card" href="{{ s.report_url }}" target="_blank" rel="noopener noreferrer">
+      <div class="storm-card-head">
+        <span class="chip storm-alert-{{ s.alert_level }}">{{ t('hurricanes.alert.' + s.alert_level) }}</span>
+        <h3>{{ s.name }}</h3>
+      </div>
+      {% if s.severity_text %}<p class="muted small">{{ s.severity_text }}</p>{% endif %}
+      <div class="storm-card-meta">
+        {% if s.country %}<span>{{ s.country }}</span>{% endif %}
+        {% if s.from_date %}<span>{{ s.from_date }}{% if s.to_date and s.to_date != s.from_date %} – {{ s.to_date }}{% endif %}</span>{% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  <p class="muted small">{{ t('hurricanes.attribution') }}</p>
+
+  <script type="application/json" id="storm-points">{{ hurricanes.storms | tojson }}</script>
+  <script src="{{ url_for('static', filename='js/hurricanes-map.js') }}" defer></script>
+  {% else %}
+  <p class="muted">{{ t('hurricanes.no_data') }}</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

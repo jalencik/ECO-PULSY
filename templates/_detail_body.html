@@ -13,18 +13,33 @@
       <div><dt><svg width="14" height="14"><use href="#i-wind"/></svg> {{ t('detail.wind') }}</dt><dd>{{ data.current.wind }} km/h</dd></div>
       <div><dt><svg width="14" height="14"><use href="#i-drop"/></svg> {{ t('detail.humidity') }}</dt><dd>{{ data.current.humidity }}%</dd></div>
       <div><dt><svg width="14" height="14"><use href="#i-gauge"/></svg> {{ t('detail.pressure') }}</dt><dd>{{ data.current.pressure }} hPa</dd></div>
+      {% if data.current.uv is not none %}
+      <div><dt><svg width="14" height="14"><use href="#i-sun"/></svg> {{ t('detail.uv_index') }}</dt><dd>{{ data.current.uv }}{% if data.current.uv_label %} <small class="muted">{{ t('uv.label.' + data.current.uv_label) }}</small>{% endif %}</dd></div>
+      {% endif %}
+      {% if data.current.sunrise %}
+      <div><dt><svg width="14" height="14"><use href="#i-sunrise"/></svg> {{ t('detail.sunrise') }}</dt><dd>{{ data.current.sunrise }}</dd></div>
+      {% endif %}
+      {% if data.current.sunset %}
+      <div><dt><svg width="14" height="14"><use href="#i-sunset"/></svg> {{ t('detail.sunset') }}</dt><dd>{{ data.current.sunset }}</dd></div>
+      {% endif %}
     </dl>
   </section>
 
   <section class="card aqi-card">
     <h2 class="card-title">{{ t('detail.aqi_title') }} <span class="aqi-abbr">(AQI)</span></h2>
     {% if data.aqi %}
-    <div class="aqi-main">
-      <span class="aqi-value {{ data.aqi.css }}-text" title="{{ t('aqi.hint') }}">{{ data.aqi.value }}</span>
-      <span class="chip chip-lg {{ data.aqi.css }}">{{ t('aqi.label.' + data.aqi.label) }}</span>
+    <div class="aqi-card-body">
+      <div class="aqi-card-text">
+        <div class="aqi-main">
+          <span class="aqi-value {{ data.aqi.css }}-text" title="{{ t('aqi.hint') }}">{{ data.aqi.value }}</span>
+          <span class="chip chip-lg {{ data.aqi.css }}">{{ t('aqi.label.' + data.aqi.label) }}</span>
+        </div>
+        <p class="aqi-advice">{{ t('aqi.advice.' + data.aqi.label) }}</p>
+        <p class="muted small">{{ t('detail.aqi_note') }}</p>
+      </div>
+      <img class="aqi-illustration" src="{{ url_for('static', filename='img/' + data.aqi.css + '.svg') }}"
+           width="112" height="112" alt="" aria-hidden="true">
     </div>
-    <p class="aqi-advice">{{ t('aqi.advice.' + data.aqi.label) }}</p>
-    <p class="muted small">{{ t('detail.aqi_note') }}</p>
     {% else %}
     <p class="muted">{{ t('detail.aqi_unavailable') }}</p>
     {% endif %}
@@ -47,8 +62,10 @@
       {% if d.hours %}
       <button type="button" class="day-cell" data-day-toggle aria-expanded="false">
         <span class="day-name">{{ t('weekday.' + d.weekday) }}</span>
+        {% if d.aqi %}<span class="chip day-aqi-chip {{ d.aqi.css }}" title="{{ t('aqi.hint') }}">{{ d.aqi.value }}</span>{% endif %}
         <svg width="24" height="24"><use href="#i-{{ d.icon }}"/></svg>
         <span class="day-temps">{{ d.tmax | round | int }}° <small>{{ d.tmin | round | int }}°</small></span>
+        {% if d.wind is not none %}<span class="muted small day-wind"><svg width="12" height="12"><use href="#i-wind"/></svg>{{ d.wind | round | int }} km/h</span>{% endif %}
         {% if d.rain_prob is not none %}<span class="muted small day-rain">{{ d.rain_prob }}%</span>{% endif %}
         <svg class="day-chevron" width="16" height="16"><use href="#i-arrow"/></svg>
       </button>
@@ -60,6 +77,11 @@
             <svg width="20" height="20"><use href="#i-{{ h.icon }}"/></svg>
             <span class="hour-temp">{{ h.temp | round | int if h.temp is not none else '–' }}°</span>
             {% if h.aqi %}<span class="chip hour-aqi-chip {{ h.aqi.css }}" title="{{ t('aqi.hint') }}">{{ h.aqi.value }}</span>{% endif %}
+            {% if h.wind is not none %}
+            <span class="hour-wind" title="{{ h.wind_dir or '' }}">
+              <svg width="11" height="11" class="wind-arrow" style="transform: rotate({{ (h.wind_degree or 0) + 180 }}deg)"><use href="#i-compass-arrow"/></svg>{{ h.wind | round | int }}
+            </span>
+            {% endif %}
           </div>
           {% endfor %}
         </div>
@@ -69,6 +91,7 @@
         <span class="day-name">{{ t('weekday.' + d.weekday) }}</span>
         <svg width="24" height="24"><use href="#i-{{ d.icon }}"/></svg>
         <span class="day-temps">{{ d.tmax | round | int }}° <small>{{ d.tmin | round | int }}°</small></span>
+        {% if d.wind is not none %}<span class="muted small day-wind"><svg width="12" height="12"><use href="#i-wind"/></svg>{{ d.wind | round | int }} km/h</span>{% endif %}
         {% if d.rain_prob is not none %}<span class="muted small day-rain">{{ d.rain_prob }}%</span>{% endif %}
       </div>
       {% endif %}

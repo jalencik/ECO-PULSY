@@ -47,6 +47,11 @@ class Config:
     # articles. Set in Render -> Environment.
     CURRENTS_API_KEY = os.environ.get("CURRENTS_API_KEY", "")
 
+    # NASA FIRMS map key (Wildfires section). Free, instant signup at
+    # firms.modaps.eosdis.nasa.gov/api/map_key - the Wildfires sidebar
+    # item shows a clear "not configured" state until this is set.
+    FIRMS_MAP_KEY = os.environ.get("FIRMS_MAP_KEY", "")
+
     # The single account that outranks admins. On boot this user is
     # promoted to the "owner" role automatically.
     OWNER_EMAIL = os.environ.get("OWNER_EMAIL", "jaloliddin2009applicant@gmail.com").lower()

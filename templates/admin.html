@@ -33,7 +33,7 @@
     <tbody>
       {% for row in rows %}
       <tr>
-        <td>{{ loop.index }}</td>
+        <td>{{ start_index + loop.index }}</td>
         <td>{{ row.user.name }}</td>
         <td>{{ row.user.email }}</td>
         <td>
@@ -61,5 +61,14 @@
     </tbody>
   </table>
   </div>
+  {% if total_pages > 1 %}
+  <div class="pagination">
+    <a class="btn btn-ghost btn-sm {{ 'btn-disabled' if page <= 1 }}"
+       href="{{ url_for('admin.panel', page=page - 1) if page > 1 else '#' }}">{{ t('admin.prev_page') }}</a>
+    <span class="muted small">{{ t('admin.page_of', page=page, total=total_pages) }}</span>
+    <a class="btn btn-ghost btn-sm {{ 'btn-disabled' if page >= total_pages }}"
+       href="{{ url_for('admin.panel', page=page + 1) if page < total_pages else '#' }}">{{ t('admin.next_page') }}</a>
+  </div>
+  {% endif %}
 </section>
 {% endblock %}

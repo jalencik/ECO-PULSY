@@ -5,7 +5,10 @@
 
 {% block page_head %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" defer></script>
 {% endblock %}
 
 {% block main %}
@@ -31,10 +34,12 @@
   <span class="map-legend-item"><i class="map-dot aqi-unhealthy"></i>{{ t('aqi.label.Unhealthy') }}</span>
   <span class="map-legend-item"><i class="map-dot aqi-very-unhealthy"></i>{{ t('aqi.label.Very Unhealthy') }}</span>
   <span class="map-legend-item"><i class="map-dot aqi-hazardous"></i>{{ t('aqi.label.Hazardous') }}</span>
+  <span class="map-legend-item"><i class="map-dot map-dot-district"></i>{{ t('map.legend_district') }}</span>
 </div>
 <p class="muted small">{{ t('map.attribution_note') }}</p>
 
 <script type="application/json" id="map-markers">{{ markers | tojson }}</script>
+<script type="application/json" id="map-districts">{{ district_markers | tojson }}</script>
 <script type="application/json" id="map-i18n">
   {"wind": {{ t('detail.wind') | tojson }}, "humidity": {{ t('detail.humidity') | tojson }},
    "viewDetails": {{ t('map.view_details') | tojson }}, "measuredAt": {{ t('region.measured_at') | tojson }},
