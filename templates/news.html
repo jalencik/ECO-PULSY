@@ -18,9 +18,10 @@
     {% for a in news.articles %}
     <a class="news-card" href="{{ a.url }}" target="_blank" rel="noopener noreferrer">
       {% if a.image %}
-      <div class="news-thumb" style="background-image:url('{{ a.image }}')"></div>
+      <img class="news-thumb" src="{{ a.image }}" alt="" loading="lazy"
+           data-fallback="{{ url_for('static', filename='img/news-placeholder.svg') }}">
       {% else %}
-      <div class="news-thumb news-thumb-empty" style="background-image:url('{{ url_for('static', filename='img/news-placeholder.svg') }}')"></div>
+      <img class="news-thumb news-thumb-empty" src="{{ url_for('static', filename='img/news-placeholder.svg') }}" alt="" loading="lazy">
       {% endif %}
       <div class="news-body">
         <h3>{{ a.title }}</h3>

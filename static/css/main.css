@@ -246,6 +246,10 @@ svg { vertical-align: -0.15em; }
 
 .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 18px; }
 .stat-row-2 { grid-template-columns: repeat(2, 1fr); }
+/* Doubled selector so this reliably beats the existing ".stat-row { 1fr }"
+   ≤960px override further down the file (equal source order would
+   otherwise let that generic mobile rule win between 641-959px). */
+.stat-row-4.stat-row-4 { grid-template-columns: repeat(4, 1fr); }
 .stat-card {
   background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
   box-shadow: var(--shadow); padding: 18px 20px;
@@ -256,6 +260,14 @@ svg { vertical-align: -0.15em; }
   width: 36px; height: 36px; border-radius: 8px; margin-bottom: 4px;
   background: var(--brand-soft); color: var(--brand);
 }
+.stat-icon-alert-red { background: var(--aqi-unhealthy); color: #fff; }
+.stat-icon-alert-orange { background: var(--aqi-usg); color: #fff; }
+.stat-icon-alert-green { background: var(--aqi-good); color: #fff; }
+/* .stat-row-4.stat-row-4 (doubled selector) beats the existing generic
+   ".stat-row { 1fr }" mobile override further down regardless of source
+   order, without having to reshuffle unrelated rules. */
+@media (max-width: 640px) { .stat-row-4.stat-row-4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 380px) { .stat-row-4.stat-row-4 { grid-template-columns: 1fr; } }
 .stat-label { font-size: 13px; color: var(--muted); font-weight: 500; }
 .stat-value { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
 .stat-value small { font-size: 13px; font-weight: 500; color: var(--muted); }
@@ -326,6 +338,12 @@ svg { vertical-align: -0.15em; }
 .rank-row-stale { opacity: 0.6; }
 .rank-row-stale .rank-name::after { content: " *"; color: var(--muted); }
 .chip-neutral { background: var(--muted); }
+/* Hottest-ranking chip: the plain grey chip-neutral read as flat/washed
+   out against the app's near-black default background and didn't visually
+   say "temperature" at all - a warm gradient off the existing brand
+   accent orange reads as heat at a glance and keeps solid contrast on
+   both the light landing theme and the dark in-app default. */
+.chip-hot { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); }
 
 /* --- Skeleton loaders (generic - used while any client-fetched panel is
    still loading, e.g. the Rankings district expand) ------------------- */
@@ -351,8 +369,10 @@ svg { vertical-align: -0.15em; }
   transition: border-color 0.15s, transform 0.15s;
 }
 .news-card:hover { text-decoration: none; border-color: var(--brand); transform: translateY(-1px); }
-.news-thumb { height: 150px; background-size: cover; background-position: center; background-color: var(--bg); }
-.news-thumb-empty { background-size: cover; background-position: center; }
+.news-thumb {
+  display: block; width: 100%; height: 150px;
+  object-fit: cover; object-position: center; background: var(--bg);
+}
 .news-body { padding: 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
 .news-body h3 { font-size: 15px; line-height: 1.35; margin: 0; }
 .news-body p { margin: 0; line-height: 1.5; }
@@ -389,7 +409,10 @@ svg { vertical-align: -0.15em; }
 
 /* District navigation pins (clustered) - deliberately plain, not
    AQI-coloured (see the comment in views.map_view for why). */
-.leaflet-div-icon.map-district-icon { background: transparent; border: none; }
+.leaflet-div-icon.map-district-icon {
+  background: transparent; border: none;
+  display: flex; align-items: center; justify-content: center;
+}
 .map-district-dot {
   display: block; width: 9px; height: 9px; border-radius: 50%;
   background: var(--muted); border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3);
@@ -412,11 +435,19 @@ svg { vertical-align: -0.15em; }
    two stylesheets' load order. */
 .map-tooltip-rich, .map-popup-wrap .leaflet-popup-content-wrapper {
   padding: 0; border-radius: 10px; box-shadow: var(--shadow);
+  background: var(--card); color: var(--ink);
 }
 .map-tooltip-rich::before { display: none; }
 .map-popup-wrap .leaflet-popup-content { margin: 0; }
+.map-popup-wrap .leaflet-popup-tip { background: var(--card); }
+.map-popup-wrap .leaflet-popup-close-button {
+  color: var(--muted); width: 28px; height: 28px; font-size: 20px;
+  line-height: 28px; top: 2px; right: 2px;
+}
+.map-popup-wrap .leaflet-popup-close-button:hover { color: var(--ink); }
 .map-popup {
-  min-width: 200px; padding: 14px 16px; font: 400 13px "Public Sans", system-ui, sans-serif; color: var(--ink);
+  min-width: 210px; max-width: 78vw; padding: 14px 16px;
+  font: 400 13px "Public Sans", system-ui, sans-serif; color: var(--ink);
 }
 .map-popup h4 { margin: 0 0 2px; font-size: 15px; }
 .map-popup .muted { margin: 0 0 8px; }
@@ -425,8 +456,17 @@ svg { vertical-align: -0.15em; }
   display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px;
   font-size: 12.5px; color: var(--muted); margin-bottom: 10px;
 }
-.map-popup-link { font-size: 12.5px; font-weight: 600; color: var(--brand); text-decoration: none; }
+.map-popup-link {
+  display: inline-block; font-size: 13px; font-weight: 600; color: var(--brand);
+  text-decoration: none; padding: 6px 0; min-height: 28px;
+}
 .map-popup-link:hover { text-decoration: underline; }
+
+/* Touch-friendly zoom control: Leaflet's default 26px buttons are under
+   the ~44px comfortable tap-target size. Bumped up only when Leaflet has
+   detected a touch device (it adds this class itself). */
+.leaflet-touch .leaflet-bar a { width: 38px; height: 38px; line-height: 38px; font-size: 18px; }
+.leaflet-touch .leaflet-control-zoom { border-radius: 8px; overflow: hidden; }
 
 /* --- AQI chips ---------------------------------------------------------------- */
 .chip {
@@ -570,7 +610,7 @@ use[href="#i-storm"] { transform-origin: center; animation: icon-storm-flash 2.2
 @media (max-width: 760px) {
   .sidebar { display: none; }
   .topbar, .content { padding-left: 18px; padding-right: 18px; }
-  #map-canvas, #wildfire-map-canvas, #hurricane-map-canvas { height: 380px; }
+  #map-canvas, #wildfire-map-canvas, #hurricane-map-canvas { height: min(70vh, 480px); }
 }
 
 /* Small phones: tighten spacing and stack controls so nothing overlaps
@@ -633,6 +673,12 @@ use[href="#i-storm"] { transform-origin: center; animation: icon-storm-flash 2.2
   border: 1px solid var(--line); border-radius: 8px;
   font: 400 14px "Public Sans", system-ui, sans-serif;
   box-shadow: var(--shadow);
+  /* Appended straight to <body> (see picker.js) so it can never be
+     clipped by a page's own content, but that also puts it in the same
+     stacking context as the mobile sidebar (z-index 60) and its
+     backdrop (55) - without its own z-index here it could render
+     underneath them on phones. */
+  z-index: 70;
 }
 .ts-dropdown .active { background: var(--brand-soft); color: var(--brand-dark); }
 @media (max-width: 960px) { .picker { width: 100%; max-width: none; } }

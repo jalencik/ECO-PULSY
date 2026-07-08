@@ -43,6 +43,22 @@
     });
   });
 
+  // --- News thumbnail fallback ----------------------------------------------
+  // Article images come from whatever CDN each source site happens to use;
+  // a good share 404 or block hotlinking, and a broken <img> src just
+  // renders empty space with nothing telling the visitor a photo was ever
+  // meant to be there. One shared listener (capture phase, since "error"
+  // doesn't bubble) swaps any failed article photo for the branded
+  // EcoPulse placeholder instead of leaving a blank box.
+  document.addEventListener("error", function (e) {
+    var img = e.target;
+    if (!img || !img.classList || !img.classList.contains("news-thumb")) return;
+    var fallback = img.dataset.fallback;
+    if (!fallback || img.src === fallback) return;
+    img.src = fallback;
+    img.classList.add("news-thumb-empty");
+  }, true);
+
   // --- CSP-safe confirm dialogs (replaces inline onsubmit) ------------------
   document.querySelectorAll("form[data-confirm]").forEach(function (form) {
     form.addEventListener("submit", function (event) {
