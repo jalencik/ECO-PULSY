@@ -1,6 +1,7 @@
 """Public pages, the dashboard, region and district pages, and the
 small JSON API that powers the cascading location picker."""
 import math
+from concurrent.futures import ThreadPoolExecutor
 
 from flask import (Blueprint, abort, current_app, g, jsonify, redirect,
                    render_template, request, url_for)
@@ -8,8 +9,10 @@ from flask_login import current_user, login_required
 
 from extensions import db
 from models import Location
+from services import hurricanes as hurricanes_service
 from services import news as news_service
 from services import openmeteo
+from services import wildfires as wildfires_service
 from services.regions import (REGIONS, dataset_key_for_slug, get_region,
                               region_display_name, slug_for_dataset_key)
 from translations import DEFAULT_LANG, SUPPORTED_LANGS
@@ -154,6 +157,15 @@ def api_ranking_districts(slug):
     been visited is free, and repeat expands by anyone are free for as
     long as that cache entry stays fresh. Real data only - a district
     that can't be fetched is marked "error" rather than guessed at.
+
+    A region's districts are fetched CONCURRENTLY (thread pool), not one
+    at a time. Flask is synchronous, so a region with a dozen+ districts
+    all still cold would previously mean a dozen+ sequential WeatherAPI
+    round-trips - easily 10-20+ seconds, which is what made this feel
+    "stuck" rather than slow. Each district is independent I/O (its own
+    cache key, its own HTTP call), so a small worker pool cuts that down
+    to roughly one round-trip's worth of wall-clock time regardless of
+    how many districts the region has.
     """
     reg = get_region(slug)
     dataset_key = dataset_key_for_slug(slug)
@@ -163,14 +175,17 @@ def api_ranking_districts(slug):
     locations = (Location.query.filter_by(region_name=dataset_key)
                  .order_by(Location.district_name).all())
 
-    districts = []
-    for loc in locations:
-        data = openmeteo.get_detail(loc.latitude, loc.longitude, cache_key=f"loc:{loc.id}")
+    def fetch_one(loc, app=current_app._get_current_object()):
+        # Each worker thread needs its own push of the Flask app context -
+        # current_app/db.session are context-local and don't cross thread
+        # boundaries on their own. Same pattern the background prefetch
+        # scheduler already uses (see services.openmeteo.warm_cache).
+        with app.app_context():
+            data = openmeteo.get_detail(loc.latitude, loc.longitude, cache_key=f"loc:{loc.id}")
         if data.get("error"):
-            districts.append({"id": loc.id, "name": loc.district_name, "error": True})
-            continue
+            return {"id": loc.id, "name": loc.district_name, "error": True}
         cur = data.get("current", {})
-        districts.append({
+        return {
             "id": loc.id,
             "name": loc.district_name,
             "error": False,
@@ -179,7 +194,13 @@ def api_ranking_districts(slug):
             "humidity": cur.get("humidity"),
             "wind": cur.get("wind"),
             "aqi": data.get("aqi"),
-        })
+        }
+
+    if locations:
+        with ThreadPoolExecutor(max_workers=min(8, len(locations))) as pool:
+            districts = list(pool.map(fetch_one, locations))
+    else:
+        districts = []
 
     return jsonify({
         "districts": districts,
@@ -207,6 +228,16 @@ def map_view():
     no extra WeatherAPI calls, no separate boundary dataset to fetch or
     maintain - just each region's real administrative-centre
     coordinates (already in services/regions.py) plus its live reading.
+
+    Every one of the 173 districts is also plotted (clustered, so it
+    stays readable at country zoom) purely as a navigation pin - name
+    and a link to that district's own page. Those pins are deliberately
+    NOT colour-coded by AQI: showing a live-looking reading for all 173
+    points would mean either 173 extra WeatherAPI calls on every map
+    view (not free, not fast) or quietly reusing the parent region's
+    number and presenting it as if it were that exact point's own
+    reading, which would misrepresent precision that isn't real. A
+    district's true live numbers are one tap away on its own page.
     """
     overview = openmeteo.get_overview()
     lang = getattr(g, "lang", DEFAULT_LANG)
@@ -225,7 +256,29 @@ def map_view():
         }
         for r in overview.get("regions", [])
     ]
-    return render_template("map.html", overview=overview, markers=markers)
+    district_markers = [
+        {"id": loc.id, "name": loc.district_name, "lat": loc.latitude, "lon": loc.longitude}
+        for loc in Location.query.order_by(Location.district_name).all()
+    ]
+    return render_template(
+        "map.html", overview=overview, markers=markers, district_markers=district_markers
+    )
+
+
+@views_bp.route("/wildfires")
+@login_required
+def wildfires():
+    """Active wildfire hotspots worldwide, from NASA FIRMS satellite
+    detections (see services/wildfires.py). Real detections only."""
+    return render_template("wildfires.html", wildfires=wildfires_service.get_wildfires())
+
+
+@views_bp.route("/hurricanes")
+@login_required
+def hurricanes():
+    """Recent/active tropical cyclones worldwide, from GDACS (see
+    services/hurricanes.py). Real events only."""
+    return render_template("hurricanes.html", hurricanes=hurricanes_service.get_hurricanes())
 
 
 # ---------------------------------------------------------------------------
@@ -268,10 +321,31 @@ def _haversine(lat1, lon1, lat2, lon2):
 @views_bp.route("/api/regions")
 @login_required
 def api_regions():
-    """Alphabetical list of region names that have districts."""
-    rows = (db.session.query(Location.region_name)
-            .distinct().order_by(Location.region_name).all())
-    return jsonify([row[0] for row in rows])
+    """Region list for the picker: {value, label} pairs.
+
+    value is the raw data/districts.json key the districts endpoint
+    below expects; label is the same name shown everywhere else in the
+    active language (rname()/region_display_name()), so the picker no
+    longer shows raw English dataset keys ("Andijan Region") in Uzbek
+    mode. Sorted by the localized label, not the raw value.
+    """
+    lang = getattr(g, "lang", DEFAULT_LANG)
+    rows = (db.session.query(Location.region_name).distinct().all())
+    options = []
+    for (name,) in rows:
+        slug = slug_for_dataset_key(name)
+        reg = get_region(slug) if slug else None
+        label = region_display_name(reg, lang) if reg else name
+        options.append({"value": name, "label": label})
+    options.sort(key=lambda o: o["label"])
+    # This list is fetched by the picker on EVERY single page in the app
+    # (it lives in the shared topbar) but the underlying data - which
+    # regions have districts - essentially never changes between
+    # deploys. A short private browser cache means clicking around the
+    # app after the first page load costs zero extra requests for this.
+    response = jsonify(options)
+    response.headers["Cache-Control"] = "private, max-age=300"
+    return response
 
 
 @views_bp.route("/api/regions/<path:region_name>/districts")
@@ -282,4 +356,6 @@ def api_districts(region_name):
             .order_by(Location.district_name).all())
     if not rows:
         abort(404)
-    return jsonify([{"id": loc.id, "name": loc.district_name} for loc in rows])
+    response = jsonify([{"id": loc.id, "name": loc.district_name} for loc in rows])
+    response.headers["Cache-Control"] = "private, max-age=300"
+    return response

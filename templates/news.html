@@ -20,7 +20,7 @@
       {% if a.image %}
       <div class="news-thumb" style="background-image:url('{{ a.image }}')"></div>
       {% else %}
-      <div class="news-thumb news-thumb-empty"><svg width="26" height="26"><use href="#i-sun-cloud"/></svg></div>
+      <div class="news-thumb news-thumb-empty" style="background-image:url('{{ url_for('static', filename='img/news-placeholder.svg') }}')"></div>
       {% endif %}
       <div class="news-body">
         <h3>{{ a.title }}</h3>

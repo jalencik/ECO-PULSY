@@ -1,0 +1,34 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="t">
+  <title id="t">Child wearing a heavy mask and hugging themselves indoors, air quality is hazardous</title>
+  <circle cx="100" cy="100" r="96" fill="#e3dede"/>
+  <circle cx="44" cy="150" r="60" fill="#e8c9cf"/>
+  <circle cx="156" cy="46" r="42" fill="#decece"/>
+
+  <!-- hazy smog wisps -->
+  <path d="M16 60h34M12 76h28M150 64h36M158 80h26" fill="none" stroke="#c9c2c2" stroke-width="5" stroke-linecap="round" opacity=".6"/>
+
+  <!-- arms hugging self -->
+  <path d="M60 160 Q100 152 140 160" fill="none" stroke="#7b1e3b" stroke-width="13" stroke-linecap="round"/>
+  <path d="M140 160 Q100 172 60 160" fill="none" stroke="#631730" stroke-width="10" stroke-linecap="round"/>
+
+  <path d="M58 168 Q58 128 100 126 Q142 128 142 168 L142 194 L58 194 Z" fill="#7b1e3b"/>
+
+  <circle cx="100" cy="93" r="46" fill="#3a2e26"/>
+  <circle cx="57" cy="104" r="9" fill="#3a2e26"/>
+  <circle cx="143" cy="104" r="9" fill="#3a2e26"/>
+
+  <circle cx="100" cy="104" r="42" fill="#f0c19a"/>
+
+  <!-- very steep eyebrows, tightly shut/worried eyes -->
+  <path d="M73 86 L93 94" fill="none" stroke="#3a2e26" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M107 94 L127 86" fill="none" stroke="#3a2e26" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M79 102q5-4 10 0M111 102q5-4 10 0" fill="none" stroke="#2b2320" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- heavier N95-style mask: wider, two visible straps -->
+  <line x1="58" y1="106" x2="80" y2="112" stroke="#cfcfcf" stroke-width="5" stroke-linecap="round"/>
+  <line x1="58" y1="120" x2="80" y2="124" stroke="#cfcfcf" stroke-width="5" stroke-linecap="round"/>
+  <line x1="142" y1="106" x2="120" y2="112" stroke="#cfcfcf" stroke-width="5" stroke-linecap="round"/>
+  <line x1="142" y1="120" x2="120" y2="124" stroke="#cfcfcf" stroke-width="5" stroke-linecap="round"/>
+  <path d="M76 112 Q100 142 124 112 Q126 140 100 149 Q74 140 76 112 Z" fill="#dfe3e6" stroke="#3a3f42" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M83 119h34M83 126h34M83 133h34" stroke="#3a3f42" stroke-width="1.5" opacity=".5"/>
+</svg>

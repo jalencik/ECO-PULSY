@@ -39,6 +39,21 @@ _STORM = {1087, 1273, 1276, 1279, 1282}
 _FOG = {1030, 1135, 1147}
 
 
+def _uv_label(uv):
+    """Standard WHO UV Index category. None when uv itself is unknown."""
+    if uv is None:
+        return None
+    if uv < 3:
+        return "Low"
+    if uv < 6:
+        return "Moderate"
+    if uv < 8:
+        return "High"
+    if uv < 11:
+        return "Very High"
+    return "Extreme"
+
+
 def describe_weather(code):
     if code is None:
         return ("Unknown", "cloud")
@@ -274,16 +289,20 @@ def _compose_detail(payload):
     # nothing here is interpolated or invented).
     hours, temps, pm_series = [], [], []
     days = []
-    for day in payload.get("forecast", {}).get("forecastday", []):
+    forecastdays = payload.get("forecast", {}).get("forecastday", [])
+    for day in forecastdays:
         d = day.get("day", {})
         d_label, d_icon = describe_weather(d.get("condition", {}).get("code"))
 
         day_hours = []
+        day_pm_values = []
         for h in day.get("hour", []):
             hp = h.get("air_quality", {}).get("pm2_5")
             hours.append(h.get("time"))
             temps.append(h.get("temp_c"))
             pm_series.append(round(hp, 1) if hp is not None else None)
+            if hp is not None:
+                day_pm_values.append(hp)
 
             h_label, h_icon = describe_weather(h.get("condition", {}).get("code"))
             time_str = h.get("time") or ""
@@ -295,7 +314,17 @@ def _compose_detail(payload):
                 "pm25": round(hp, 1) if hp is not None else None,
                 "aqi": pm25_to_aqi(hp),
                 "rain_prob": h.get("chance_of_rain"),
+                "wind": h.get("wind_kph"),
+                "wind_degree": h.get("wind_degree"),
+                "wind_dir": h.get("wind_dir"),
             })
+
+        # A day-level AQI so the collapsed forecast row can show one too
+        # (matches the reference layout) without inventing anything: it's
+        # a plain average of that SAME day's real hourly PM2.5 readings
+        # above, the same kind of honest averaging views._summarise()
+        # already does for the national dashboard summary.
+        day_pm25 = round(sum(day_pm_values) / len(day_pm_values), 1) if day_pm_values else None
 
         days.append({
             "date": day.get("date"),
@@ -303,8 +332,10 @@ def _compose_detail(payload):
             "tmax": d.get("maxtemp_c"),
             "tmin": d.get("mintemp_c"),
             "rain_prob": d.get("daily_chance_of_rain"),
+            "wind": d.get("maxwind_kph"),
             "label": d_label,
             "icon": d_icon,
+            "aqi": pm25_to_aqi(day_pm25),
             "hours": day_hours,
         })
     hours, temps, pm_series = hours[:48], temps[:48], pm_series[:48]
@@ -318,6 +349,10 @@ def _compose_detail(payload):
         ("CO", _r(aq.get("co")), "ug/m3"),
     ]
 
+    # Today's sunrise/sunset/UV - all straight from WeatherAPI's own
+    # astro block for day 0 (today), never computed or estimated locally.
+    today_astro = forecastdays[0].get("astro", {}) if forecastdays else {}
+
     return {
         "error": False, "demo": False,
         "current": {
@@ -328,6 +363,10 @@ def _compose_detail(payload):
             "pressure": cur.get("pressure_mb"),
             "weather_label": label,
             "icon": icon,
+            "uv": cur.get("uv"),
+            "uv_label": _uv_label(cur.get("uv")),
+            "sunrise": today_astro.get("sunrise"),
+            "sunset": today_astro.get("sunset"),
         },
         "aqi": pm25_to_aqi(pm25),
         "pollutants": pollutants,
@@ -366,12 +405,15 @@ def _demo_region_detail(slug):
     temps = [round(28 + 8 * rng.random(), 1) for _ in hours]
     pm_series = [round(10 + 40 * rng.random(), 1) for _ in hours]
     pm25 = pm_series[0]
+    demo_uv = round(rng.uniform(1, 9), 1)
     days = [{
         "date": (start + timedelta(days=i)).strftime("%Y-%m-%d"),
         "weekday": (start + timedelta(days=i)).strftime("%a"),
         "tmax": round(30 + 8 * rng.random(), 1), "tmin": round(18 + 6 * rng.random(), 1),
         "rain_prob": rng.randint(0, 40),
+        "wind": round(rng.uniform(8, 22), 1),
         "label": "Clear", "icon": "sun",
+        "aqi": pm25_to_aqi(round(10 + 40 * rng.random(), 1)),
         "hours": [{
             "hour_label": f"{h:02d}:00",
             "temp": round(20 + 12 * rng.random(), 1),
@@ -379,13 +421,18 @@ def _demo_region_detail(slug):
             "pm25": round(10 + 40 * rng.random(), 1),
             "aqi": pm25_to_aqi(round(10 + 40 * rng.random(), 1)),
             "rain_prob": rng.randint(0, 30),
+            "wind": round(rng.uniform(4, 20), 1),
+            "wind_degree": rng.randint(0, 359),
+            "wind_dir": rng.choice(["N", "NE", "E", "SE", "S", "SW", "W", "NW"]),
         } for h in range(24)],
     } for i in range(3)]
     return {
         "error": False, "demo": True,
         "current": {"temp": temps[0], "feels_like": temps[0] + 1.5,
                     "humidity": rng.randint(20, 60), "wind": 11.0,
-                    "pressure": 1009.0, "weather_label": "Clear", "icon": "sun"},
+                    "pressure": 1009.0, "weather_label": "Clear", "icon": "sun",
+                    "uv": demo_uv, "uv_label": _uv_label(demo_uv),
+                    "sunrise": "05:52 AM", "sunset": "07:41 PM"},
         "aqi": pm25_to_aqi(pm25),
         "pollutants": [("PM2.5", pm25, "ug/m3"), ("PM10", round(pm25 * 1.8, 1), "ug/m3"),
                        ("NO2", 21.0, "ug/m3"), ("O3", 88.0, "ug/m3"),

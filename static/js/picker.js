@@ -9,6 +9,14 @@
     maxItems: 1,
     maxOptions: 200,
     sortField: { field: "text", direction: "asc" },
+    // Render the option list on <body> instead of nesting it inside the
+    // topbar. The picker sits inside several stacked flex/positioned
+    // containers (topbar -> topbar-right -> picker), and on pages with
+    // their own positioned content below (map, ranking rows, news
+    // cards) a nested dropdown can end up visually clipped or covered.
+    // Appending to <body> sidesteps that entirely, regardless of what
+    // the rest of the page looks like.
+    dropdownParent: "body",
   };
 
   const district = new TomSelect(wrap.querySelector("[data-picker-district]"), {
@@ -22,12 +30,17 @@
     placeholder: wrap.dataset.tRegion || "Region…",
   });
 
+  // {value, label} pairs, already localized and sorted server-side (see
+  // views.api_regions) so the picker shows the same names as the rest
+  // of the app instead of raw English dataset keys.
   fetch("/api/regions")
     .then((r) => r.json())
-    .then((names) => {
-      region.addOptions(names.map((n) => ({ value: n, text: n })));
+    .then((options) => {
+      region.addOptions(options.map((o) => ({ value: o.value, text: o.label })));
     })
-    .catch(() => {});
+    .catch(function (err) {
+      console.warn("EcoPulse: could not load the region list for the picker.", err);
+    });
 
   region.on("change", (value) => {
     district.clear(true);

@@ -40,7 +40,18 @@
     return metric === "polluted" && d.aqi ? d.aqi.css : "chip-neutral";
   }
 
+  function renderSkeleton(container) {
+    container.setAttribute("aria-busy", "true");
+    container.innerHTML =
+      '<div class="rank-skeleton">' +
+        '<div class="rank-skeleton-row"></div>' +
+        '<div class="rank-skeleton-row"></div>' +
+        '<div class="rank-skeleton-row"></div>' +
+      "</div>";
+  }
+
   function renderDistricts(container, metric, districts) {
+    container.removeAttribute("aria-busy");
     var getter = METRIC_GETTERS[metric];
     var usable = districts.filter(function (d) {
       return !d.error && getter(d) != null;
@@ -77,7 +88,7 @@
       renderDistricts(container, metric, districtCache[slug]);
       return;
     }
-    container.textContent = container.dataset.loadingText;
+    renderSkeleton(container);
     fetch("/api/rankings/" + encodeURIComponent(slug) + "/districts")
       .then(function (r) {
         if (!r.ok) throw new Error("bad response");
@@ -88,6 +99,7 @@
         renderDistricts(container, metric, districtCache[slug]);
       })
       .catch(function () {
+        container.removeAttribute("aria-busy");
         container.textContent = container.dataset.errorText;
       });
   }

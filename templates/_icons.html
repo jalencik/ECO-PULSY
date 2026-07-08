@@ -72,5 +72,44 @@
     <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M18 6 6 18M6 6l12 12"/>
     </symbol>
+    <symbol id="i-sunrise" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2v5M4.2 10.2l1.4 1.4M19.8 10.2l-1.4 1.4M1 18h22"/><path d="M5 18a7 7 0 0 1 14 0"/><path d="M9 14l3-3 3 3"/>
+    </symbol>
+    <symbol id="i-sunset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 9V4M4.2 10.2l1.4 1.4M19.8 10.2l-1.4 1.4M1 18h22"/><path d="M5 18a7 7 0 0 1 14 0"/><path d="M9 11l3 3 3-3"/>
+    </symbol>
+    <symbol id="i-compass-arrow" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <path d="M12 2 L15.5 13 L12 10.5 L8.5 13 Z"/>
+    </symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 22c4.5 0 7-3 7-6.8 0-3-1.7-5-3.2-7C14.5 6.5 13.7 4.5 14 2c-2 1.4-4.6 4-4.6 7.6 0 1-.3 1.8-1 2.4-.9.8-1.9-.3-1.9-1.5C5 12 5 14.6 5 15.2 5 19 7.5 22 12 22Z"/>
+    </symbol>
+    <symbol id="i-cyclone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 7a5 5 0 1 0 5 5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+    </symbol>
+
+    <!-- AQI mood faces: small round expressive icons, one per EPA band
+         (see services/aqi.py PM25_BREAKPOINTS). Used anywhere a live AQI
+         reading is shown as a friendly indicator (map markers) rather
+         than just a number - never used on its own without the real
+         numeric AQI it corresponds to. -->
+    <symbol id="face-good" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="10" r="1" fill="currentColor" stroke="none"/><path d="M7.5 14.5Q12 18.5 16.5 14.5"/>
+    </symbol>
+    <symbol id="face-moderate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="10" r="1" fill="currentColor" stroke="none"/><path d="M8 15Q12 17 16 15"/>
+    </symbol>
+    <symbol id="face-usg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="10.5" r="1" fill="currentColor" stroke="none"/><path d="M8 15.5h8"/>
+    </symbol>
+    <symbol id="face-unhealthy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="10.5" r="1" fill="currentColor" stroke="none"/><path d="M8 16.5Q12 13.5 16 16.5"/>
+    </symbol>
+    <symbol id="face-very-unhealthy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/><path d="M6.8 8.3l2.4 1M17.2 8.3l-2.4 1"/><circle cx="8.5" cy="11" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="11" r="1" fill="currentColor" stroke="none"/><path d="M7.5 17Q12 13.3 16.5 17"/>
+    </symbol>
+    <symbol id="face-hazardous" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/><path d="M7 9l3 3M10 9l-3 3M14 9l3 3M17 9l-3 3"/><path d="M7 17.5Q12 12.5 17 17.5"/>
+    </symbol>
   </defs>
 </svg>

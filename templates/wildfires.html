@@ -1,0 +1,52 @@
+{% extends "app_base.html" %}
+{% block title %}{{ t('wildfires.title') }} — EcoPulse{% endblock %}
+{% block page_title %}{{ t('wildfires.title') }}{% endblock %}
+{% block page_sub %}{{ t('wildfires.sub') }}{% endblock %}
+
+{% block page_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" defer></script>
+{% endblock %}
+
+{% block main %}
+{% if not wildfires.configured %}
+  <div class="banner banner-info">{{ t('wildfires.not_configured') }}</div>
+{% elif wildfires.error and not wildfires.points %}
+  <div class="banner banner-error">{{ t('wildfires.unavailable') }}</div>
+{% else %}
+  {% if wildfires.stale %}
+    <div class="banner banner-info">{{ t('wildfires.stale') }}</div>
+  {% endif %}
+
+  <div class="stat-row stat-row-2">
+    <div class="stat-card">
+      <span class="stat-icon"><svg width="20" height="20"><use href="#i-flame"/></svg></span>
+      <span class="stat-label">{{ t('wildfires.total_label') }}</span>
+      <span class="stat-value">{{ wildfires.total }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon"><svg width="20" height="20"><use href="#i-gauge"/></svg></span>
+      <span class="stat-label">{{ t('wildfires.shown_label') }}</span>
+      <span class="stat-value">{{ wildfires.points | length }}</span>
+    </div>
+  </div>
+
+  {% if wildfires.points %}
+  <section class="card map-card">
+    <div id="wildfire-map-canvas" role="application" aria-label="{{ t('wildfires.title') }}"></div>
+  </section>
+  <div class="map-legend">
+    <span class="map-legend-title">{{ t('wildfires.legend_title') }}</span>
+    <span class="map-legend-item"><i class="map-dot" style="background:#c0392b"></i>{{ t('wildfires.legend_high') }}</span>
+    <span class="map-legend-item"><i class="map-dot" style="background:#e08a3e"></i>{{ t('wildfires.legend_nominal') }}</span>
+  </div>
+  <p class="muted small">{{ t('wildfires.attribution') }}</p>
+
+  <script type="application/json" id="wildfire-points">{{ wildfires.points | tojson }}</script>
+  <script type="application/json" id="wildfire-i18n">{"frpLabel": {{ t('wildfires.frp_label') | tojson }}}</script>
+  <script src="{{ url_for('static', filename='js/wildfires-map.js') }}" defer></script>
+  {% else %}
+  <p class="muted">{{ t('wildfires.no_data') }}</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

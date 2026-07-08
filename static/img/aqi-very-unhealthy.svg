@@ -1,0 +1,28 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="t">
+  <title id="t">Child wearing a mask with arms crossed, air quality is very unhealthy</title>
+  <circle cx="100" cy="100" r="96" fill="#e6d3ef"/>
+  <circle cx="44" cy="150" r="60" fill="#dcc2ea"/>
+  <circle cx="156" cy="46" r="42" fill="#ece0f2"/>
+
+  <!-- arms crossed -->
+  <path d="M62 158 Q100 148 138 158" fill="none" stroke="#7d4f9e" stroke-width="13" stroke-linecap="round"/>
+  <path d="M138 158 Q100 168 62 158" fill="none" stroke="#6a4288" stroke-width="10" stroke-linecap="round"/>
+
+  <path d="M58 168 Q58 128 100 126 Q142 128 142 168 L142 194 L58 194 Z" fill="#7d4f9e"/>
+
+  <circle cx="100" cy="93" r="46" fill="#3a2e26"/>
+  <circle cx="57" cy="104" r="9" fill="#3a2e26"/>
+  <circle cx="143" cy="104" r="9" fill="#3a2e26"/>
+
+  <circle cx="100" cy="104" r="42" fill="#f0c19a"/>
+
+  <!-- steep worried eyebrows, squinting eyes -->
+  <path d="M74 87 L92 93" fill="none" stroke="#3a2e26" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M108 93 L126 87" fill="none" stroke="#3a2e26" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M80 101h9M112 101h9" stroke="#2b2320" stroke-width="3" stroke-linecap="round"/>
+
+  <line x1="59" y1="110" x2="80" y2="120" stroke="#d8c6e6" stroke-width="4" stroke-linecap="round"/>
+  <line x1="141" y1="110" x2="120" y2="120" stroke="#d8c6e6" stroke-width="4" stroke-linecap="round"/>
+  <path d="M77 116 Q100 140 123 116 Q124 138 100 146 Q76 138 77 116 Z" fill="#eaf0fb" stroke="#4a2e6d" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M84 121h32M84 127h32" stroke="#4a2e6d" stroke-width="1.5" opacity=".5"/>
+</svg>

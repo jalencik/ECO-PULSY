@@ -72,6 +72,9 @@ svg { vertical-align: -0.15em; }
 .btn-lg { padding: 12px 24px; font-size: 15px; }
 .btn-sm { padding: 6px 12px; font-size: 13px; }
 .btn-block { width: 100%; }
+.btn-disabled { opacity: 0.4; pointer-events: none; }
+
+.pagination { display: flex; align-items: center; justify-content: center; gap: 16px; padding-top: 16px; }
 
 /* --- Landing page ------------------------------------------------------- */
 .site-nav { background: #fff; border-bottom: 1px solid var(--line); }
@@ -324,6 +327,21 @@ svg { vertical-align: -0.15em; }
 .rank-row-stale .rank-name::after { content: " *"; color: var(--muted); }
 .chip-neutral { background: var(--muted); }
 
+/* --- Skeleton loaders (generic - used while any client-fetched panel is
+   still loading, e.g. the Rankings district expand) ------------------- */
+.rank-skeleton { display: flex; flex-direction: column; gap: 8px; padding: 6px 0; }
+.rank-skeleton-row { height: 28px; border-radius: 6px; }
+.rank-skeleton-row,
+.skeleton-block {
+  background: linear-gradient(90deg, var(--bg) 25%, var(--line) 50%, var(--bg) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* --- News ------------------------------------------------------------------ */
 .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 .news-card {
@@ -334,16 +352,31 @@ svg { vertical-align: -0.15em; }
 }
 .news-card:hover { text-decoration: none; border-color: var(--brand); transform: translateY(-1px); }
 .news-thumb { height: 150px; background-size: cover; background-position: center; background-color: var(--bg); }
-.news-thumb-empty { display: flex; align-items: center; justify-content: center; color: var(--muted); }
+.news-thumb-empty { background-size: cover; background-position: center; }
 .news-body { padding: 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
 .news-body h3 { font-size: 15px; line-height: 1.35; margin: 0; }
 .news-body p { margin: 0; line-height: 1.5; }
 .news-meta { margin-top: auto; display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--muted); }
 .news-attribution { margin-top: 16px; }
 
+/* --- Wildfires / Hurricanes ------------------------------------------------- */
+.storm-list { display: flex; flex-direction: column; gap: 10px; }
+.storm-card {
+  display: block; padding: 14px 18px; color: var(--ink); text-decoration: none;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); transition: border-color .15s;
+}
+.storm-card:hover { border-color: var(--brand); }
+.storm-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.storm-card-head h3 { margin: 0; font-size: 15px; }
+.storm-card-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+.storm-alert-green { background: var(--aqi-good); }
+.storm-alert-orange { background: var(--aqi-usg); }
+.storm-alert-red { background: var(--aqi-unhealthy); }
+
 /* --- Map ------------------------------------------------------------------- */
 .map-card { padding: 0; overflow: hidden; margin-bottom: 16px; }
-#map-canvas { height: 520px; width: 100%; background: var(--bg); }
+#map-canvas, #wildfire-map-canvas, #hurricane-map-canvas { height: 520px; width: 100%; background: var(--bg); }
 .map-legend {
   display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
   padding: 12px 16px; background: var(--card); border: 1px solid var(--line);
@@ -352,6 +385,27 @@ svg { vertical-align: -0.15em; }
 .map-legend-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
 .map-legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink); }
 .map-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.map-dot-district { background: var(--muted); width: 8px; height: 8px; }
+
+/* District navigation pins (clustered) - deliberately plain, not
+   AQI-coloured (see the comment in views.map_view for why). */
+.leaflet-div-icon.map-district-icon { background: transparent; border: none; }
+.map-district-dot {
+  display: block; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--muted); border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+.marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background: transparent; }
+.marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
+  background: var(--brand); color: #fff; opacity: 0.88; font-weight: 700;
+}
+
+/* AQI mood-face badge (map popups) - a coloured circle reusing the exact
+   same .aqi-* background classes as the chips elsewhere, so the colour
+   is always identical to the number sitting right next to it. */
+.aqi-face {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%; color: #fff; flex-shrink: 0;
+}
 
 /* Leaflet popup/tooltip content - scoped to our own className so this
    always wins over Leaflet's own default padding regardless of the
@@ -400,13 +454,16 @@ svg { vertical-align: -0.15em; }
 .w-icon-lg { color: var(--brand); display: inline-flex; }
 .temp-lg { font-size: 44px; font-weight: 700; letter-spacing: -0.03em; }
 .current-label { font-weight: 600; margin: 0; }
-.detail-list { display: flex; gap: 26px; margin: 0; border-top: 1px solid var(--line); padding-top: 15px; }
+.detail-list { display: flex; flex-wrap: wrap; gap: 14px 26px; margin: 0; border-top: 1px solid var(--line); padding-top: 15px; }
 .detail-list div { display: flex; flex-direction: column; gap: 3px; }
 .detail-list dt { font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
 .detail-list dd { margin: 0; font-weight: 600; }
 .aqi-main { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
 .aqi-value { font-size: 44px; font-weight: 700; letter-spacing: -0.03em; }
 .aqi-advice { margin: 0 0 8px; }
+.aqi-card-body { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.aqi-card-text { flex: 1; min-width: 0; }
+.aqi-illustration { width: 100px; height: 100px; flex-shrink: 0; }
 .chart-wrap { position: relative; height: 300px; }
 
 .day-list { display: flex; flex-direction: column; }
@@ -422,14 +479,16 @@ svg { vertical-align: -0.15em; }
 .day-cell-static:hover { background: none; }
 .day-cell svg { color: var(--brand); flex-shrink: 0; }
 .day-name { width: 46px; font-size: 12.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; flex-shrink: 0; }
+.day-aqi-chip { font-size: 11px; padding: 2px 8px; flex-shrink: 0; }
 .day-temps { font-weight: 700; font-size: 14.5px; margin-left: auto; }
 .day-temps small { color: var(--muted); font-weight: 500; }
+.day-wind { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; }
 .day-rain { width: 34px; text-align: right; flex-shrink: 0; }
 .day-chevron { color: var(--muted); flex-shrink: 0; transition: transform 0.25s ease; }
 .day-cell[aria-expanded="true"] .day-chevron { transform: rotate(90deg); }
 
 .hour-strip { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
-.hour-strip.open { max-height: 200px; }
+.hour-strip.open { max-height: 220px; }
 .hour-strip-inner { display: flex; gap: 16px; overflow-x: auto; padding: 4px 4px 16px; }
 .hour-cell {
   display: flex; flex-direction: column; align-items: center; gap: 6px;
@@ -439,6 +498,48 @@ svg { vertical-align: -0.15em; }
 .hour-time { color: var(--muted); }
 .hour-temp { font-weight: 700; }
 .hour-aqi-chip { font-size: 10.5px; padding: 1px 7px; }
+.hour-wind { display: inline-flex; align-items: center; gap: 2px; color: var(--muted); font-size: 10.5px; }
+.wind-arrow { color: var(--muted); flex-shrink: 0; transition: transform 0.3s ease; }
+
+/* --- Weather icon animation --------------------------------------------
+   Subtle, continuous motion on the condition icons themselves (sun,
+   cloud, rain, snow, storm, fog) wherever they appear - region cards,
+   the current-weather card, day/hour forecast cells. Scoped by exactly
+   which sprite symbol is referenced, so it never touches unrelated UI
+   icons (nav, admin, etc.) that happen to sit in the same SVG sprite. */
+use[href="#i-sun"] { transform-origin: center; animation: icon-sun-spin 16s linear infinite; }
+use[href="#i-cloud"], use[href="#i-sun-cloud"], use[href="#i-fog"] {
+  transform-origin: center; animation: icon-cloud-drift 4.5s ease-in-out infinite;
+}
+use[href="#i-rain"], use[href="#i-drizzle"] {
+  transform-origin: center; animation: icon-rain-fall 1.6s ease-in-out infinite;
+}
+use[href="#i-snow"] { transform-origin: center; animation: icon-snow-drift 3s ease-in-out infinite; }
+use[href="#i-storm"] { transform-origin: center; animation: icon-storm-flash 2.2s ease-in-out infinite; }
+
+@keyframes icon-sun-spin { to { transform: rotate(360deg); } }
+@keyframes icon-cloud-drift {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(2px); }
+}
+@keyframes icon-rain-fall {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(1.5px); opacity: .7; }
+}
+@keyframes icon-snow-drift {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(1.5px) rotate(10deg); }
+}
+@keyframes icon-storm-flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+@media (prefers-reduced-motion: reduce) {
+  use[href="#i-sun"], use[href="#i-cloud"], use[href="#i-sun-cloud"], use[href="#i-fog"],
+  use[href="#i-rain"], use[href="#i-drizzle"], use[href="#i-snow"], use[href="#i-storm"] {
+    animation: none;
+  }
+}
 
 /* --- Tables ------------------------------------------------------------------------ */
 /* Horizontal scroll wrapper so wide tables never break the page layout
@@ -469,7 +570,7 @@ svg { vertical-align: -0.15em; }
 @media (max-width: 760px) {
   .sidebar { display: none; }
   .topbar, .content { padding-left: 18px; padding-right: 18px; }
-  #map-canvas { height: 380px; }
+  #map-canvas, #wildfire-map-canvas, #hurricane-map-canvas { height: 380px; }
 }
 
 /* Small phones: tighten spacing and stack controls so nothing overlaps
@@ -512,6 +613,9 @@ svg { vertical-align: -0.15em; }
 
   .health-tip-card { flex-direction: column; text-align: center; gap: 10px; }
   .health-tip-illustration { width: 72px; height: 72px; }
+
+  .aqi-card-body { flex-direction: column; text-align: center; }
+  .aqi-illustration { width: 84px; height: 84px; }
 }
 
 /* --- Location picker (cascading searchable dropdowns) -------------------- */

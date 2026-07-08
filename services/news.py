@@ -23,11 +23,15 @@ NEWS_CACHE_SECONDS = 3600  # refresh at most once an hour
 STALE_CACHE_KEY = "news:aqi:stale"
 CACHE_KEY = "news:aqi"
 
-# Kept broad on purpose: Currents has thin dedicated coverage of
-# Uzbekistan specifically, so a narrow query would return almost
-# nothing most days. Global air-quality/pollution coverage is still
-# directly relevant to an air-quality app.
-KEYWORDS = "air quality OR air pollution OR smog"
+# Two tiers, queried in order: air-pollution-specific terms fill the
+# page first; broader environment/climate terms only fill in whatever's
+# left over. This is two Currents calls per refresh (still cached
+# hourly - a couple of dozen calls a day, nowhere near the 1,000/day
+# free-tier budget) instead of one, so the page is dominated by air
+# pollution stories on days there are enough of them, and never empty
+# on the (more common) days there aren't.
+KEYWORDS_STRICT = "air pollution OR air quality OR smog OR PM2.5 OR particulate matter OR haze"
+KEYWORDS_BROAD = "air quality OR climate change OR emissions OR environment OR wildfire smoke"
 MAX_ARTICLES = 12
 
 
@@ -72,10 +76,24 @@ def get_news():
 
 
 def _fetch():
+    articles = _search(KEYWORDS_STRICT)
+    seen = {a["url"] for a in articles}
+    if len(articles) < MAX_ARTICLES:
+        for a in _search(KEYWORDS_BROAD):
+            if a["url"] in seen:
+                continue
+            articles.append(a)
+            seen.add(a["url"])
+            if len(articles) >= MAX_ARTICLES:
+                break
+    return articles[:MAX_ARTICLES]
+
+
+def _search(keywords):
     response = requests.get(
         API_URL, timeout=REQUEST_TIMEOUT,
         headers={"Authorization": _api_key()},
-        params={"keywords": KEYWORDS, "language": "en"},
+        params={"keywords": keywords, "language": "en"},
     )
     response.raise_for_status()
     data = response.json()
@@ -84,31 +102,37 @@ def _fetch():
 
     articles = []
     for item in (data.get("news") or [])[:MAX_ARTICLES]:
-        # Currents' own docs disagree with themselves on this field's
-        # shape ("url" string in examples, "urls" string|list in the
-        # formal schema) - handle whichever shows up.
-        url = item.get("url")
-        if not url:
-            urls_field = item.get("urls")
-            if isinstance(urls_field, list) and urls_field:
-                url = urls_field[0]
-            elif isinstance(urls_field, str):
-                url = urls_field
-        title = item.get("title")
-        if not url or not title:
-            continue
-        image = item.get("image")
-        if image in (None, "None", ""):
-            image = None
-        articles.append({
-            "title": title,
-            "description": _trim(item.get("description")),
-            "url": url,
-            "image": image,
-            "author": item.get("author") if item.get("author") not in (None, "None") else None,
-            "published": _format_date(item.get("published")),
-        })
+        parsed = _parse_article(item)
+        if parsed:
+            articles.append(parsed)
     return articles
+
+
+def _parse_article(item):
+    # Currents' own docs disagree with themselves on this field's shape
+    # ("url" string in examples, "urls" string|list in the formal
+    # schema) - handle whichever shows up.
+    url = item.get("url")
+    if not url:
+        urls_field = item.get("urls")
+        if isinstance(urls_field, list) and urls_field:
+            url = urls_field[0]
+        elif isinstance(urls_field, str):
+            url = urls_field
+    title = item.get("title")
+    if not url or not title:
+        return None
+    image = item.get("image")
+    if image in (None, "None", ""):
+        image = None
+    return {
+        "title": title,
+        "description": _trim(item.get("description")),
+        "url": url,
+        "image": image,
+        "author": item.get("author") if item.get("author") not in (None, "None") else None,
+        "published": _format_date(item.get("published")),
+    }
 
 
 def _trim(text, limit=220):

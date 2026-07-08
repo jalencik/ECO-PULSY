@@ -1,4 +1,5 @@
 """Administrator & Owner panel."""
+import math
 import time
 from functools import wraps
 
@@ -14,6 +15,11 @@ admin_bp = Blueprint("admin", __name__)
 
 # What admins (not the owner) are shown as the admin count, by request.
 ADMIN_VISIBLE_ADMIN_COUNT = 2
+
+# The owner/queen table can have 600+ rows (300 real + 300 demo). Paginate
+# it server-side instead of rendering every row on every load - the page
+# was one of the slowest in the app before this.
+PAGE_SIZE = 50
 
 
 def admin_required(view):
@@ -47,42 +53,57 @@ def panel():
 
     Queen: the same combined total as the owner and the same edit/delete
     powers, but - like a plain admin - always sees the admin count fixed
-    at 2, and every admin/queen other than herself is shown as a plain
-    Administrator. The owner is always shown truthfully as Owner, and
-    she is always shown truthfully as Queen.
+    at 2, and every OTHER administrator is shown as a plain Member, same
+    as a plain admin would see them. Only two ranks are ever shown as
+    truthfully special to her: the owner (always "Owner") and herself
+    (always "Queen"). This intentionally mirrors the plain-admin branch
+    below exactly, just with the combined total and manage powers added.
 
     Plain admins: demo accounts are filtered out of the query entirely
     (never appear, in the count or the table), admin count fixed at 2,
     herself/the owner/the queen shown as Administrator, everyone else
     as Member.
+
+    The table itself is paginated (PAGE_SIZE rows/page) for everyone -
+    totals (total_users, total_admins) always come from real COUNT
+    queries against the full table, never from loading every row into
+    Python first, regardless of which page you're looking at.
     """
     if current_user.is_owner:
-        users = User.query.order_by(User.created_at.desc()).all()
-        rows = [{"user": u, "role_label": u.role_label, "badge": u.is_admin} for u in users]
-        total_admins = sum(1 for u in users if u.is_admin)
+        base_query = User.query
+        total_admins = User.query.filter(User.role.in_(("admin", "owner", "queen"))).count()
     elif current_user.is_queen:
-        users = User.query.order_by(User.created_at.desc()).all()
+        base_query = User.query
+        total_admins = ADMIN_VISIBLE_ADMIN_COUNT
+    else:
+        base_query = User.query.filter_by(is_fake=False)
+        total_admins = ADMIN_VISIBLE_ADMIN_COUNT
+
+    total_users = base_query.order_by(None).count()
+    total_pages = max(1, math.ceil(total_users / PAGE_SIZE))
+    page = max(1, min(request.args.get("page", 1, type=int) or 1, total_pages))
+
+    page_users = (base_query.order_by(User.created_at.desc())
+                  .offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE).all())
+
+    if current_user.is_owner:
+        rows = [{"user": u, "role_label": u.role_label, "badge": u.is_admin} for u in page_users]
+    elif current_user.is_queen:
         rows = []
-        for u in users:
+        for u in page_users:
             if u.is_owner:
                 rows.append({"user": u, "role_label": "Owner", "badge": True})
             elif u.id == current_user.id:
                 rows.append({"user": u, "role_label": "Queen", "badge": True})
-            elif u.is_admin:
-                rows.append({"user": u, "role_label": "Administrator", "badge": True})
             else:
                 rows.append({"user": u, "role_label": "Member", "badge": False})
-        total_admins = ADMIN_VISIBLE_ADMIN_COUNT
     else:
-        users = (User.query.filter_by(is_fake=False)
-                 .order_by(User.created_at.desc()).all())
         rows = []
-        for u in users:
+        for u in page_users:
             if u.id == current_user.id or u.is_owner or u.is_queen:
                 rows.append({"user": u, "role_label": "Administrator", "badge": True})
             else:
                 rows.append({"user": u, "role_label": "Member", "badge": False})
-        total_admins = ADMIN_VISIBLE_ADMIN_COUNT
 
     return render_template(
         "admin.html",
@@ -90,8 +111,11 @@ def panel():
         is_queen=current_user.is_queen,
         can_manage=current_user.is_owner_or_queen,
         rows=rows,
-        total_users=len(users),
+        total_users=total_users,
         total_admins=total_admins,
+        page=page,
+        total_pages=total_pages,
+        start_index=(page - 1) * PAGE_SIZE,
     )
 
 
@@ -110,8 +134,14 @@ def edit_user(user_id):
                 flash("flash.email_in_use", "error")
                 return render_template("edit_user.html", user=user), 400
             user.email = new_email
+        # A Queen can promote/demote between Member and Administrator only -
+        # never create a second Queen or hand out Owner. Only the Owner can
+        # assign those two ranks. An out-of-range value (including a Queen
+        # trying to slip "owner"/"queen" through the form) is silently
+        # ignored, same as any other invalid role has always been here.
         new_role = request.form.get("role", user.role)
-        if new_role in ("user", "admin", "owner", "queen"):
+        allowed_roles = ("user", "admin", "owner", "queen") if current_user.is_owner else ("user", "admin")
+        if new_role in allowed_roles:
             user.role = new_role
         db.session.commit()
         flash("flash.user_updated", "message")
@@ -174,6 +204,7 @@ def diagnostics():
         "Demo mode": current_app.config["DEMO_DATA"],
         "Weather key present": bool(key),
         "News key present": bool(current_app.config.get("CURRENTS_API_KEY")),
+        "Wildfire key present": bool(current_app.config.get("FIRMS_MAP_KEY")),
         "Prefetch interval (min)": current_app.config["PREFETCH_MINUTES"],
     }
     return render_template("diagnostics.html", tests=tests, state=state)

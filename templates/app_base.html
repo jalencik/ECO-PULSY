@@ -31,6 +31,14 @@
          href="{{ url_for('views.news') }}">
         <svg width="17" height="17"><use href="#i-news"/></svg> {{ t('sidebar.news') }}
       </a>
+      <a class="side-link {{ 'active' if request.endpoint == 'views.wildfires' }}"
+         href="{{ url_for('views.wildfires') }}">
+        <svg width="17" height="17"><use href="#i-flame"/></svg> {{ t('sidebar.wildfires') }}
+      </a>
+      <a class="side-link {{ 'active' if request.endpoint == 'views.hurricanes' }}"
+         href="{{ url_for('views.hurricanes') }}">
+        <svg width="17" height="17"><use href="#i-cyclone"/></svg> {{ t('sidebar.hurricanes') }}
+      </a>
 
       <p class="side-label">{{ t('sidebar.regions') }}</p>
       <div class="side-regions">

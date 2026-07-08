@@ -1,0 +1,27 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="t">
+  <title id="t">Child wearing a mask, air quality is unhealthy</title>
+  <circle cx="100" cy="100" r="96" fill="#f8d3c0"/>
+  <circle cx="44" cy="150" r="60" fill="#f5c0b0"/>
+  <circle cx="156" cy="46" r="42" fill="#fbe0d2"/>
+
+  <path d="M58 168 Q58 128 100 126 Q142 128 142 168 L142 194 L58 194 Z" fill="#c0503f"/>
+  <line x1="92" y1="138" x2="89" y2="162" stroke="#f9dcd0" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="108" y1="138" x2="111" y2="162" stroke="#f9dcd0" stroke-width="3.5" stroke-linecap="round"/>
+
+  <circle cx="100" cy="93" r="46" fill="#3a2e26"/>
+  <circle cx="57" cy="104" r="9" fill="#3a2e26"/>
+  <circle cx="143" cy="104" r="9" fill="#3a2e26"/>
+
+  <circle cx="100" cy="104" r="42" fill="#f0c19a"/>
+
+  <!-- worried eyebrows -->
+  <path d="M75 89 Q83 93 92 90" fill="none" stroke="#3a2e26" stroke-width="3" stroke-linecap="round"/>
+  <path d="M108 90 Q117 93 125 89" fill="none" stroke="#3a2e26" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="84" cy="102" r="4.5" fill="#2b2320"/>
+  <circle cx="116" cy="102" r="4.5" fill="#2b2320"/>
+
+  <line x1="60" y1="109" x2="80" y2="119" stroke="#bcd9e6" stroke-width="4" stroke-linecap="round"/>
+  <line x1="140" y1="109" x2="120" y2="119" stroke="#bcd9e6" stroke-width="4" stroke-linecap="round"/>
+  <path d="M78 115 Q100 136 122 115 Q123 136 100 143 Q77 136 78 115 Z" fill="#eaf6fb" stroke="#0e5a6d" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M85 123 Q100 129 115 123" fill="none" stroke="#0e5a6d" stroke-width="1.5" opacity=".45"/>
+</svg>

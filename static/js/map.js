@@ -14,8 +14,10 @@
   if (!canvas || typeof L === "undefined") return;
 
   var markersEl = document.getElementById("map-markers");
+  var districtsEl = document.getElementById("map-districts");
   var i18nEl = document.getElementById("map-i18n");
   var markers = markersEl ? JSON.parse(markersEl.textContent) : [];
+  var districts = districtsEl ? JSON.parse(districtsEl.textContent) : [];
   var i18n = i18nEl ? JSON.parse(i18nEl.textContent) : {};
 
   // Mirrors the --aqi-* custom properties in main.css. Leaflet's SVG
@@ -28,14 +30,42 @@
     "aqi-very-unhealthy": "#8e44ad",
     "aqi-hazardous": "#7b1e3b",
   };
+  var AQI_FACES = {
+    "aqi-good": "face-good",
+    "aqi-moderate": "face-moderate",
+    "aqi-usg": "face-usg",
+    "aqi-unhealthy": "face-unhealthy",
+    "aqi-very-unhealthy": "face-very-unhealthy",
+    "aqi-hazardous": "face-hazardous",
+  };
   var NEUTRAL_COLOR = "#8a97a0";
 
-  var map = L.map(canvas, { scrollWheelZoom: false });
+  // Real, approximate Uzbekistan extent (37.0-45.8 N, 55.7-73.3 E) with a
+  // little padding - keeps panning/zooming focused on the country instead
+  // of drifting off into Kazakhstan, Turkmenistan, China etc. This is a
+  // viewport limit only, not a claim about exact border geometry.
+  var UZ_BOUNDS = L.latLngBounds([36.9, 55.6], [45.9, 73.4]);
+
+  var map = L.map(canvas, {
+    scrollWheelZoom: false, // enabled on hover/touch below, so it never hijacks page scroll
+    touchZoom: true,        // pinch-to-zoom on phones/tablets (Leaflet default, set explicitly)
+    tap: true,
+    maxBounds: UZ_BOUNDS,
+    maxBoundsViscosity: 1.0, // "solid" edge - panning stops firmly at the border
+    minZoom: 5,
+  });
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors",
-    maxZoom: 12,
-    minZoom: 4,
+    maxZoom: 15,
+    minZoom: 5,
   }).addTo(map);
+
+  // Trackpad "pinch" gestures (and plain mouse wheel) only zoom the map
+  // while the cursor is actually over it - otherwise scrolling the page
+  // past the map would get hijacked. Real finger pinch on touchscreens
+  // is unaffected (touchZoom above handles that independently).
+  canvas.addEventListener("mouseenter", function () { map.scrollWheelZoom.enable(); });
+  canvas.addEventListener("mouseleave", function () { map.scrollWheelZoom.disable(); });
 
   var bounds = [];
 
@@ -61,10 +91,38 @@
     marker.bindPopup(buildPopup(m), { className: "map-popup-wrap" });
   });
 
+  // District pins: every one of the 173 districts, clustered so the map
+  // stays readable at country zoom and only breaks apart into individual
+  // pins once you zoom into a cluster. Deliberately plain/neutral (see
+  // the comment in views.map_view for why these don't carry a live AQI
+  // colour) - tap one to open that district's own page for its real
+  // current numbers.
+  if (districts.length && typeof L.markerClusterGroup === "function") {
+    var clusterGroup = L.markerClusterGroup({
+      maxClusterRadius: 42,
+      spiderfyOnMaxZoom: true,
+      disableClusteringAtZoom: 11,
+    });
+    var districtIcon = L.divIcon({
+      className: "map-district-icon",
+      html: '<span class="map-district-dot"></span>',
+      iconSize: [10, 10],
+      iconAnchor: [5, 5],
+    });
+    districts.forEach(function (d) {
+      if (d.lat == null || d.lon == null) return;
+      var pin = L.marker([d.lat, d.lon], { icon: districtIcon });
+      pin.bindTooltip(d.name, { direction: "top", offset: [0, -4] });
+      pin.on("click", function () { window.location.href = "/locations/" + d.id; });
+      clusterGroup.addLayer(pin);
+    });
+    map.addLayer(clusterGroup);
+  }
+
   if (bounds.length) {
     map.fitBounds(bounds, { padding: [30, 30] });
   } else {
-    map.setView([41.3, 64.5], 5);
+    map.fitBounds(UZ_BOUNDS);
   }
 
   function buildPopup(m) {
@@ -85,6 +143,22 @@
     if (m.aqi) {
       var chipRow = document.createElement("div");
       chipRow.className = "map-popup-aqi";
+
+      var faceId = AQI_FACES[m.aqi.css];
+      if (faceId) {
+        var faceWrap = document.createElement("span");
+        faceWrap.className = "aqi-face " + m.aqi.css;
+        var faceSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        faceSvg.setAttribute("width", "20");
+        faceSvg.setAttribute("height", "20");
+        var use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+        use.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#" + faceId);
+        use.setAttribute("href", "#" + faceId);
+        faceSvg.appendChild(use);
+        faceWrap.appendChild(faceSvg);
+        chipRow.appendChild(faceWrap);
+      }
+
       var chip = document.createElement("span");
       chip.className = "chip " + m.aqi.css;
       chip.textContent = "AQI " + m.aqi.value;
