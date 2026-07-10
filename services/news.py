@@ -1,17 +1,29 @@
-"""Environment / air-quality news via Currents API (free tier).
+"""Environment news: a curated local library + optional live headlines.
 
-Chosen after checking NewsAPI.org, GNews and Currents API pricing and
-terms of service directly: NewsAPI's free tier cannot legally run in
-production at all, and GNews's free tier explicitly bans commercial
-use. Currents API's free tier (1,000 requests/day, no comparable
-commercial-use ban) is the one that's actually usable on a live site
-at no cost.
+Two independent sources, combined on the News page:
 
-Cached like the weather data (see services/openmeteo.py's _cached
-helper) so page views never wait on - or multiply - the external call:
-refreshed at most once an hour, which is a tiny fraction of the daily
-budget no matter how much traffic the News page gets.
+1. CURATED LIBRARY (always available, costs nothing): 100+ landmark
+   environmental stories hand-picked into data/environmental_news.json.
+   Every entry links to a stable, real page (Wikipedia / WHO) that has
+   survived for years and opens in a new tab - so the News section is
+   always full, professional and free, even with no API key configured.
+   The display order is shuffled deterministically per day, so the page
+   feels fresh every morning without any external call.
+
+2. LIVE HEADLINES via Currents API (free tier), when CURRENTS_API_KEY
+   is set. Chosen after checking NewsAPI.org, GNews and Currents API
+   pricing and terms of service directly: NewsAPI's free tier cannot
+   legally run in production at all, and GNews's free tier explicitly
+   bans commercial use. Currents API's free tier (1,000 requests/day,
+   no comparable commercial-use ban) is the one that's actually usable
+   on a live site at no cost. Queries are strictly environment-scoped
+   (see KEYWORDS_* below). Cached hourly like the weather data.
 """
+import json
+import random
+from datetime import date
+from pathlib import Path
+
 import requests
 from flask import current_app
 
@@ -34,32 +46,83 @@ KEYWORDS_STRICT = "air pollution OR air quality OR smog OR PM2.5 OR particulate 
 KEYWORDS_BROAD = "air quality OR climate change OR emissions OR environment OR wildfire smoke"
 MAX_ARTICLES = 12
 
+CURATED_PATH = Path(__file__).parent.parent / "data" / "environmental_news.json"
+UZ_NEWS_PATH = Path(__file__).parent.parent / "data" / "uzbekistan_news.json"
+
 
 def _api_key():
     return current_app.config.get("CURRENTS_API_KEY", "")
 
 
-def get_news():
-    """Cached recent air-quality / environment articles.
+_curated_cache = None
+_uz_news_cache = None
 
-    Returns {"articles": [...], "error": bool, "stale": bool,
-    "configured": bool}. Never raises: a failed fetch falls back to the
-    last good list if one exists, otherwise an empty, clearly-labelled
-    result - never fabricated headlines.
+
+def get_uzbekistan():
+    """Uzbekistan's 2025-2026 environmental plans and initiatives.
+
+    A small curated file (data/uzbekistan_news.json) of this year's
+    national stories - kept in chronological order (newest first), never
+    shuffled, because "what is my country doing this year" reads as a
+    timeline, not a grab-bag. Loaded once per process; a missing or
+    corrupt file just means the section is hidden.
     """
+    global _uz_news_cache
+    if _uz_news_cache is None:
+        try:
+            data = json.loads(UZ_NEWS_PATH.read_text(encoding="utf-8"))
+            _uz_news_cache = data.get("items") or []
+        except Exception:
+            _uz_news_cache = []
+    return _uz_news_cache
+
+
+def get_curated():
+    """The local library of landmark environmental stories.
+
+    Loaded from disk once per process, then re-ordered deterministically
+    per calendar day (same shuffle for every visitor on a given day, a
+    fresh one tomorrow). Never raises - a missing/corrupt file just
+    means an empty list, and the page falls back to live headlines.
+    """
+    global _curated_cache
+    if _curated_cache is None:
+        try:
+            data = json.loads(CURATED_PATH.read_text(encoding="utf-8"))
+            _curated_cache = data.get("items") or []
+        except Exception:
+            _curated_cache = []
+    if not _curated_cache:
+        return []
+    items = list(_curated_cache)
+    random.Random(date.today().toordinal()).shuffle(items)
+    return items
+
+
+def get_news():
+    """Curated library + cached recent live articles.
+
+    Returns {"articles": [...live...], "curated": [...], "error": bool,
+    "stale": bool, "configured": bool}. Never raises: a failed live
+    fetch falls back to the last good list if one exists, otherwise an
+    empty list - the curated library keeps the page full either way,
+    and headlines are never fabricated.
+    """
+    local = {"curated": get_curated(), "uzbekistan": get_uzbekistan()}
     if not _api_key():
-        return {"articles": [], "error": False, "stale": False, "configured": False}
+        return {"articles": [], "error": False, "stale": False,
+                "configured": False, **local}
 
     cached = cache.get(CACHE_KEY)
     if cached is not None:
-        return cached
+        return {**cached, **local}
 
     try:
         articles = _fetch()
         result = {"articles": articles, "error": False, "stale": False, "configured": True}
         cache.set(CACHE_KEY, result, timeout=NEWS_CACHE_SECONDS)
         cache.set(STALE_CACHE_KEY, result, timeout=0)
-        return result
+        return {**result, **local}
     except Exception:
         # Broad on purpose: news is a nice-to-have, never worth a 500.
         # Anything from a network blip to an unexpected response shape
@@ -69,10 +132,10 @@ def get_news():
             stale = dict(stale)
             stale["stale"] = True
             cache.set(CACHE_KEY, stale, timeout=300)
-            return stale
+            return {**stale, **local}
         empty = {"articles": [], "error": True, "stale": False, "configured": True}
         cache.set(CACHE_KEY, empty, timeout=120)
-        return empty
+        return {**empty, **local}
 
 
 def _fetch():

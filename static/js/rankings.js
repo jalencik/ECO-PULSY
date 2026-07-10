@@ -20,6 +20,37 @@
 
   var districtCache = {}; // region slug -> array of district dicts
 
+  // Proportional value bars: each row gets a bar scaled between the
+  // panel's min and max, so the gap between #1 and #14 is visible at a
+  // glance instead of being an undifferentiated list of numbers. A
+  // floor of 6% keeps even the smallest value visibly a bar.
+  function barWidth(value, min, max) {
+    if (value == null || isNaN(value)) return 0;
+    var span = max - min;
+    var ratio = span > 0 ? (value - min) / span : 1;
+    return Math.round(6 + 94 * ratio);
+  }
+
+  function fillPanelBars(panel) {
+    var rows = panel.querySelectorAll(".rank-row[data-raw]");
+    var values = [];
+    rows.forEach(function (row) {
+      var v = parseFloat(row.dataset.raw);
+      if (!isNaN(v)) values.push(v);
+    });
+    if (!values.length) return;
+    var min = Math.min.apply(null, values);
+    var max = Math.max.apply(null, values);
+    rows.forEach(function (row) {
+      var bar = row.querySelector(".rank-bar i");
+      if (!bar) return;
+      var v = parseFloat(row.dataset.raw);
+      bar.style.width = (isNaN(v) ? 0 : barWidth(v, min, max)) + "%";
+    });
+  }
+
+  document.querySelectorAll(".ranking-panel").forEach(fillPanelBars);
+
   function formatValue(metric, d) {
     if (metric === "hottest") {
       return (d.temp != null ? Math.round(d.temp) : "–") + "°";
@@ -69,11 +100,19 @@
       return (
         '<div class="rank-row-sub' + (d.stale ? " rank-row-stale" : "") + '">' +
           '<span class="rank-num">' + (i + 1) + "</span>" +
-          '<span class="rank-name"></span>' +
+          '<span class="rank-main">' +
+            '<span class="rank-name"></span>' +
+            '<span class="rank-bar rank-bar-sub"><i></i></span>' +
+          "</span>" +
           '<span class="chip ' + chipClass(metric, d) + '"></span>' +
         "</div>"
       );
     }).join("");
+
+    // Same min/max scaled bars as the region rows above.
+    var getterValues = usable.map(function (d) { return getter(d); });
+    var min = Math.min.apply(null, getterValues);
+    var max = Math.max.apply(null, getterValues);
 
     // Fill text nodes via textContent (not string concat) so district
     // names can never be interpreted as HTML.
@@ -82,6 +121,7 @@
       if (d.stale) rows[i].title = container.dataset.staleText || "";
       rows[i].querySelector(".rank-name").textContent = d.name;
       rows[i].querySelector(".chip").textContent = formatValue(metric, d);
+      rows[i].querySelector(".rank-bar i").style.width = barWidth(getter(d), min, max) + "%";
     });
   }
 

@@ -62,9 +62,18 @@
   <p class="muted small">{{ t('hurricanes.attribution') }}</p>
 
   <script type="application/json" id="storm-points">{{ hurricanes.storms | tojson }}</script>
+  <script src="{{ url_for('static', filename='js/basemap.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/hurricanes-map.js') }}" defer></script>
   {% else %}
   <p class="muted">{{ t('hurricanes.no_data') }}</p>
   {% endif %}
 {% endif %}
+
+<section class="card info-note">
+  <span class="info-note-icon"><svg width="20" height="20"><use href="#i-cyclone"/></svg></span>
+  <div>
+    <h2 class="card-title">{{ t('hurricanes.why_title') }}</h2>
+    <p class="muted">{{ t('hurricanes.why_body') }}</p>
+  </div>
+</section>
 {% endblock %}

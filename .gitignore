@@ -5,3 +5,5 @@ instance/
 .env
 venv/
 .venv/
+.claude/
+_dev_local.py

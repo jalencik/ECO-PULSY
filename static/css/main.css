@@ -827,3 +827,292 @@ body::-webkit-scrollbar-thumb {
   background: var(--line); border-radius: 8px;
   border: 3px solid var(--bg); background-clip: padding-box;
 }
+
+/* ==========================================================================
+   v11: professional pass — refined dark palette, rankings bars & medals,
+   curated news library, leadership roster, info notes, role colours
+   ========================================================================== */
+
+/* Slightly deeper, more neutral dark canvas: the previous values were a
+   touch washed-out; deeper background + subtly lighter cards read as a
+   more deliberate, premium dark UI while keeping the same hue family. */
+[data-theme="dark"] {
+  --bg: #0b1114;
+  --card: #121b21;
+  --line: #26333c;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+/* Section headings between page blocks (News live vs library, etc.) */
+.section-heading { margin: 26px 0 14px; }
+.section-heading:first-child { margin-top: 0; }
+.section-heading h2 { font-size: 18px; letter-spacing: -0.01em; margin: 0 0 3px; }
+.section-heading p { margin: 0; }
+
+/* --- Info note (the "why we track this" cards) --------------------------- */
+.info-note { display: flex; gap: 16px; align-items: flex-start; }
+.info-note-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+  background: var(--brand-soft); color: var(--brand);
+}
+.info-note .card-title { margin-bottom: 6px; }
+.info-note p { margin: 0; max-width: 90ch; }
+
+/* --- Rankings: value bars + medals ---------------------------------------- */
+.rank-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.rank-bar {
+  display: block; height: 5px; border-radius: 999px;
+  background: var(--line); overflow: hidden;
+}
+.rank-bar i {
+  display: block; height: 100%; width: 0; border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand), var(--brand-dark));
+  transition: width 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.rank-bar-sub { height: 4px; opacity: 0.85; }
+.rank-row { align-items: center; }
+.rank-num.rank-medal { color: #fff; }
+.rank-medal-1 { background: linear-gradient(135deg, #e8b923, #c9920a); box-shadow: 0 1px 4px rgba(201, 146, 10, 0.45); }
+.rank-medal-2 { background: linear-gradient(135deg, #b8c2cc, #8e9aa6); box-shadow: 0 1px 4px rgba(142, 154, 166, 0.45); }
+.rank-medal-3 { background: linear-gradient(135deg, #cd8a4b, #a96430); box-shadow: 0 1px 4px rgba(169, 100, 48, 0.45); }
+.ranking-tab { display: inline-flex; align-items: center; gap: 6px; }
+.ranking-tab svg { flex-shrink: 0; }
+
+/* --- News: curated story library ------------------------------------------ */
+.news-filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.news-filter {
+  padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--card); color: var(--muted); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: border-color 0.15s, color 0.15s;
+}
+.news-filter:hover { border-color: var(--brand); color: var(--ink); }
+.news-filter.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+.news-card-story .news-body { gap: 9px; }
+.story-tags { display: flex; align-items: center; gap: 8px; }
+.story-cat {
+  display: inline-flex; align-items: center;
+  padding: 2.5px 9px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+}
+.story-year { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+.story-read { color: var(--brand); font-weight: 700; }
+.news-card-story:hover .story-read { text-decoration: underline; }
+
+/* Category hues (backgrounds are translucent so the same rule works on
+   both light and dark cards; text colours get a dark-mode lift below). */
+.story-cat-air        { background: rgba(58, 165, 192, 0.16);  color: #23768e; }
+.story-cat-climate    { background: rgba(232, 99, 10, 0.14);   color: #b5500a; }
+.story-cat-water      { background: rgba(47, 111, 208, 0.14);  color: #2a5ba8; }
+.story-cat-plastic    { background: rgba(194, 65, 126, 0.14);  color: #a33368; }
+.story-cat-wildlife   { background: rgba(91, 158, 61, 0.16);   color: #45772f; }
+.story-cat-forests    { background: rgba(46, 125, 91, 0.16);   color: #276a4d; }
+.story-cat-disasters  { background: rgba(192, 57, 43, 0.14);   color: #a13023; }
+.story-cat-energy     { background: rgba(184, 134, 11, 0.16);  color: #8f6809; }
+.story-cat-policy     { background: rgba(125, 91, 190, 0.14);  color: #64459c; }
+.story-cat-pollution  { background: rgba(92, 107, 117, 0.16);  color: #4d5b64; }
+.story-cat-region     { background: rgba(14, 90, 109, 0.14);   color: #0e5a6d; }
+[data-theme="dark"] .story-cat-air        { color: #6fc4dc; }
+[data-theme="dark"] .story-cat-climate    { color: #f09b5c; }
+[data-theme="dark"] .story-cat-water      { color: #7ba7e8; }
+[data-theme="dark"] .story-cat-plastic    { color: #e08ab4; }
+[data-theme="dark"] .story-cat-wildlife   { color: #9cc97f; }
+[data-theme="dark"] .story-cat-forests    { color: #7bbf9e; }
+[data-theme="dark"] .story-cat-disasters  { color: #e88a7d; }
+[data-theme="dark"] .story-cat-energy     { color: #dcb45c; }
+[data-theme="dark"] .story-cat-policy     { color: #b79ae0; }
+[data-theme="dark"] .story-cat-pollution  { color: #a3b2bc; }
+[data-theme="dark"] .story-cat-region     { color: #6fc4dc; }
+
+/* --- Role badges: owner gold, queen violet -------------------------------- */
+.role-owner { background: #f7ecd3; color: #8a6410; }
+.role-queen { background: #efe6f8; color: #6b3fa0; }
+[data-theme="dark"] .role-owner { background: #3a2f14; color: #e8c56a; }
+[data-theme="dark"] .role-queen { background: #2d1f42; color: #c9a7f0; }
+
+/* --- Owner-only leadership roster ------------------------------------------ */
+.admin-roster { border-color: var(--brand); }
+.admin-roster .card-title {
+  display: flex; align-items: center; gap: 7px;
+  color: var(--brand); margin-bottom: 2px;
+}
+.admin-roster-head { margin-bottom: 14px; }
+.admin-roster-head p { margin: 0; }
+@keyframes roster-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: none; }
+}
+.roster-reveal { animation: roster-in 0.35s ease; }
+
+/* --- Small refinements ------------------------------------------------------ */
+/* Keyboard focus is clearly visible on interactive chips/rows everywhere. */
+.ranking-tab:focus-visible, .news-filter:focus-visible, .rank-row:focus-visible {
+  outline: 2px solid var(--brand); outline-offset: 2px;
+}
+/* Leaflet attribution strip follows the theme instead of glowing white. */
+[data-theme="dark"] .leaflet-control-attribution {
+  background: rgba(18, 27, 33, 0.85); color: var(--muted);
+}
+[data-theme="dark"] .leaflet-control-attribution a { color: var(--brand); }
+[data-theme="dark"] .leaflet-bar a {
+  background: var(--card); color: var(--ink); border-color: var(--line);
+}
+[data-theme="dark"] .leaflet-bar a:hover { background: var(--bg); }
+[data-theme="dark"] .leaflet-bar a.leaflet-disabled {
+  background: var(--card); color: var(--line);
+}
+
+/* ==========================================================================
+   v12: Uzbekistan problem-solving sections — storm & dust alerts, fire
+   danger, trees / Yashil Makon, audience role switcher
+   ========================================================================== */
+
+/* --- Audience role switcher (Public / Farmer / Expert) -------------------- */
+.role-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 10px;
+}
+.role-head .card-title { margin-bottom: 0; }
+.role-switch {
+  display: inline-flex; border: 1px solid var(--line); border-radius: 999px;
+  overflow: hidden; flex-shrink: 0;
+}
+.role-btn {
+  padding: 7px 14px; border: none; background: var(--card); color: var(--muted);
+  font: 600 12.5px "Public Sans", system-ui, sans-serif; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.role-btn + .role-btn { border-left: 1px solid var(--line); }
+.role-btn:hover { color: var(--ink); }
+.role-btn.active { background: var(--brand); color: #fff; }
+.role-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+
+.advice-list { margin: 10px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+.advice-list li { line-height: 1.5; }
+.advice-list li::marker { color: var(--brand); }
+
+/* --- Risk tier chips (storms + shared) ------------------------------------- */
+.risk-red { background: var(--aqi-unhealthy); }
+.risk-orange { background: var(--aqi-usg); }
+.risk-yellow { background: var(--aqi-moderate); }
+.risk-green { background: var(--aqi-good); }
+
+.storm-level { display: flex; align-items: center; gap: 10px; margin: 0 0 4px; font-weight: 500; }
+.storm-table td { white-space: nowrap; }
+.storm-table td:first-child a { font-weight: 600; }
+.storm-signals { display: flex; gap: 6px; flex-wrap: wrap; }
+.signal-tag {
+  display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 700;
+  background: rgba(232, 99, 10, 0.15); color: var(--accent);
+}
+.signal-tag.signal-dust { background: rgba(184, 134, 11, 0.16); color: var(--aqi-moderate); }
+[data-theme="dark"] .signal-tag { color: #f09b5c; }
+[data-theme="dark"] .signal-tag.signal-dust { color: #dcb45c; }
+
+/* --- Fire danger grid (wildfires page) ------------------------------------- */
+.fire-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px; margin: 12px 0 14px;
+}
+.fire-chip {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line);
+  color: var(--ink); font-size: 13px; text-decoration: none;
+  transition: transform 0.15s ease-out, border-color 0.15s ease-out;
+}
+.fire-chip:hover { text-decoration: none; transform: translateY(-1px); border-color: var(--brand); }
+.fire-chip:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.fire-chip-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fire-chip strong { font-family: "Archivo", sans-serif; }
+/* Tier is carried by a translucent tint of the semantic colour (same
+   device as the news category chips) plus the coloured index value -
+   readable on both themes without decorative border stripes. */
+.fire-red { background: rgba(192, 57, 43, 0.13); }
+.fire-red strong { color: var(--aqi-unhealthy); }
+.fire-orange { background: rgba(210, 105, 30, 0.13); }
+.fire-orange strong { color: var(--aqi-usg); }
+.fire-yellow { background: rgba(184, 134, 11, 0.13); }
+.fire-yellow strong { color: var(--aqi-moderate); }
+.fire-green { background: rgba(61, 139, 72, 0.13); }
+.fire-green strong { color: var(--aqi-good); }
+[data-theme="dark"] .fire-red strong { color: #e88a7d; }
+[data-theme="dark"] .fire-orange strong { color: #f09b5c; }
+[data-theme="dark"] .fire-yellow strong { color: #dcb45c; }
+[data-theme="dark"] .fire-green strong { color: #9cc97f; }
+
+/* --- Trees / Yashil Makon --------------------------------------------------- */
+.community-counter { display: flex; flex-direction: column; gap: 2px; margin-bottom: 16px; }
+.community-total {
+  font: 700 40px "Archivo", sans-serif; letter-spacing: -0.03em;
+  color: var(--brand);
+}
+.pledge-form label { display: block; font-weight: 600; font-size: 13px; margin: 0 0 6px; }
+.pledge-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.pledge-row input[type="number"] {
+  width: 110px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px;
+  font: 400 15px "Public Sans", sans-serif; background: var(--card); color: var(--ink);
+}
+.pledge-row select {
+  flex: 1; min-width: 150px; padding: 9px 12px; border: 1px solid var(--line);
+  border-radius: 8px; font: 400 14px "Public Sans", sans-serif;
+  background: var(--card); color: var(--ink);
+}
+.pledge-row input:focus, .pledge-row select:focus { outline: 2px solid var(--brand); border-color: var(--brand); }
+.pledge-form .muted.small { margin-top: 8px; }
+.pledge-feed { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 8px; }
+.pledge-item {
+  display: flex; align-items: center; gap: 9px; padding: 7px 0;
+  border-bottom: 1px dashed var(--line); font-size: 13.5px;
+}
+.pledge-item:last-child { border-bottom: none; }
+.pledge-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(61, 139, 72, 0.15); color: var(--aqi-good);
+}
+[data-theme="dark"] .pledge-icon { color: #9cc97f; }
+.pledge-text { flex: 1; min-width: 0; }
+
+.tree-calc { display: flex; flex-direction: column; gap: 12px; margin: 12px 0; }
+.tree-calc input[type="number"] {
+  width: 140px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
+  font: 600 17px "Archivo", sans-serif; background: var(--card); color: var(--ink);
+}
+.tree-calc input:focus { outline: 2px solid var(--brand); border-color: var(--brand); }
+.tree-calc-results { display: flex; gap: 24px; flex-wrap: wrap; }
+.tree-calc-results strong {
+  display: block; font: 700 26px "Archivo", sans-serif; letter-spacing: -0.02em;
+  color: var(--brand);
+}
+
+/* --- v12 polish pass --------------------------------------------------------- */
+/* Region context under a stat value (storms page): its own quiet line
+   instead of wrapping raggedly inside the number. */
+.stat-context {
+  font-size: 12.5px; color: var(--muted); font-weight: 500;
+  margin-top: -2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Card-shaped links get the same visible keyboard focus as buttons. */
+.news-card:focus-visible, .region-card:focus-visible, .storm-card:focus-visible {
+  outline: 2px solid var(--brand); outline-offset: 2px;
+}
+
+/* Comfortable touch targets for the audience switcher on touch devices:
+   the segmented control becomes a full-width row of >=44px buttons. */
+@media (max-width: 760px) {
+  .role-switch { display: flex; width: 100%; }
+  .role-btn { flex: 1; min-height: 44px; padding: 10px 12px; font-size: 13px; text-align: center; }
+}
+
+/* Reduced motion: every v11/v12 animation gets an instant alternative. */
+@media (prefers-reduced-motion: reduce) {
+  .roster-reveal { animation: none; }
+  .rank-bar i { transition: none; }
+  .fire-chip, .news-card, .region-card, .rank-chevron, .day-chevron { transition: none; }
+  .fire-chip:hover, .news-card:hover, .region-card:hover { transform: none; }
+  .rank-skeleton-row, .skeleton-block { animation: none; }
+}

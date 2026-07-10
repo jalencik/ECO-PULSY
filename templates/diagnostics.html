@@ -29,6 +29,36 @@
 </section>
 
 <section class="card">
+  <h2 class="card-title">Database &amp; user persistence</h2>
+  {% if db_info.at_risk %}
+  <div class="banner banner-error">
+    <strong>Warning: this deployment is running on a temporary SQLite file.</strong>
+    Every account will be LOST on the next deploy or restart. Open Render → Environment
+    and set <code>DATABASE_URL</code> to your Supabase connection URI (Session pooler),
+    then redeploy.
+  </div>
+  {% elif db_info.persistent %}
+  <div class="banner banner-info">
+    Users are stored in {{ db_info.engine_label }} — they persist across every redeploy and restart.
+  </div>
+  {% endif %}
+  <div class="table-scroll">
+  <table class="table">
+    <tbody>
+      <tr><td>Database engine</td><td><strong>{{ db_info.engine_label }}</strong></td></tr>
+      <tr><td>Host</td><td><strong>{{ db_info.host }}</strong></td></tr>
+      <tr><td>Survives redeploys</td><td><strong>{{ 'Yes' if db_info.persistent else 'NO — ephemeral disk' }}</strong></td></tr>
+      {% if db_info.real_users is defined %}
+      <tr><td>Real registered users</td><td><strong>{{ db_info.real_users }}</strong></td></tr>
+      <tr><td>Demo member accounts</td><td><strong>{{ db_info.demo_users }}</strong></td></tr>
+      <tr><td>Total rows in users table</td><td><strong>{{ db_info.total_users }}</strong></td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section class="card">
   <h2 class="card-title">Application state</h2>
   <div class="table-scroll">
   <table class="table">

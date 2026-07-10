@@ -5,6 +5,45 @@
 
 {% block main %}
 {% include "_flash.html" %}
+
+{% if is_owner and admin_roster %}
+{# Owner-only leadership roster. Present in the page but hidden until
+   the owner types the secret word anywhere on this page (see the
+   reveal listener in ui.js). Never rendered for anyone else - the
+   query itself is owner-gated in admin.py. #}
+<section class="card admin-roster" id="admin-roster" hidden>
+  <div class="admin-roster-head">
+    <h2 class="card-title"><svg width="16" height="16"><use href="#i-shield"/></svg> {{ t('admin.roster_title') }}</h2>
+    <p class="muted small">{{ t('admin.roster_sub', count=admin_roster | length) }}</p>
+  </div>
+  <div class="table-scroll">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ t('admin.col_num') }}</th><th>{{ t('admin.col_name') }}</th><th>{{ t('admin.col_email') }}</th><th>{{ t('admin.col_role') }}</th><th>{{ t('admin.col_joined') }}</th><th>{{ t('admin.col_manage') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in admin_roster %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ row.user.name }}</td>
+        <td>{{ row.user.email }}</td>
+        <td><span class="role-badge {{ row.role_class }}">{{ t('role.' + row.role_label) }}</span></td>
+        <td>{{ row.user.created_at.strftime('%d %b %Y') }}</td>
+        <td class="row-actions">
+          <a class="icon-btn" href="{{ url_for('admin.edit_user', user_id=row.user.id) }}" title="{{ t('admin.edit_tooltip') }}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endif %}
+
 <div class="stat-row stat-row-2">
   <div class="stat-card">
     <span class="stat-icon"><svg width="20" height="20"><use href="#i-users"/></svg></span>
@@ -37,7 +76,7 @@
         <td>{{ row.user.name }}</td>
         <td>{{ row.user.email }}</td>
         <td>
-          <span class="role-badge {{ 'role-admin' if row.badge else 'role-user' }}">{{ t('role.' + row.role_label) }}</span>
+          <span class="role-badge {{ row.role_class if row.role_class is defined else ('role-admin' if row.badge else 'role-user') }}">{{ t('role.' + row.role_label) }}</span>
         </td>
         <td>{{ row.user.created_at.strftime('%d %b %Y') }}</td>
         {% if can_manage %}

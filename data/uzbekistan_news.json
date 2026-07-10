@@ -1,0 +1,77 @@
+{
+  "_comment": "Uzbekistan environmental news, plans and initiatives from 2026 (with late-2025 items where they set up this year's policy). Curated manually; every URL verified live at the time of adding. Newest first.",
+  "items": [
+    {
+      "title": "Uzbekistan to restore 1.27 million hectares of forests and develop a 'desert economy'",
+      "description": "The government's 2026-2030 plan targets new and restored forests on 1.27 million hectares, 16,000 hectares of protective forest belts, and 2.5 million hectares of green cover on the dried Aral seabed by the end of 2026.",
+      "source": "Gazeta.uz",
+      "date": "Jul 2026",
+      "category": "forests",
+      "url": "https://www.gazeta.uz/en/2026/07/06/aral-desert/"
+    },
+    {
+      "title": "Renewable output hits 5 billion kWh in 2026 - up 28% year on year",
+      "description": "Solar and wind generation since the start of 2026 saved roughly 1.3 billion cubic metres of natural gas and prevented around 2.9 million tonnes of emissions.",
+      "source": "Daryo.uz",
+      "date": "Jun 2026",
+      "category": "energy",
+      "url": "https://daryo.uz/en/2026/06/09/uzbekistan-renewable-energy-output-reaches-5bn-kwh-in-2026/"
+    },
+    {
+      "title": "President plants the first trees of the National Dendrological Park",
+      "description": "A flagship green project of 2026: a national dendrological park intended to hold thousands of species and anchor the capital's green belt under the Yashil Makon programme.",
+      "source": "Gazeta.uz",
+      "date": "Apr 2026",
+      "category": "forests",
+      "url": "https://www.gazeta.uz/en/2026/04/02/national-dendropark/"
+    },
+    {
+      "title": "Tashkent introduces ecological zones and car eco-stickers",
+      "description": "From 1 January 2026 the capital is divided into environmental zones with green/yellow/red stickers by vehicle emissions class - the country's first low-emission-zone system, aimed at the transport share of PM2.5.",
+      "source": "Frank.uz",
+      "date": "Jan 2026",
+      "category": "air",
+      "url": "https://frank.uz/en/news-en/tashkent-will-be-divided-into-ecological-zones-and-quality-stickers-for-cars-will-be-introduced/"
+    },
+    {
+      "title": "National Dendrological Park project launched",
+      "description": "The official presidential record of the park's launch - species selection, siting and the park's role in the national greening programme.",
+      "source": "President.uz",
+      "date": "2026",
+      "category": "forests",
+      "url": "https://president.uz/en/lists/view/9067"
+    },
+    {
+      "title": "Yashil Makon expands as a foundation of green growth",
+      "description": "The Ministry of Ecology on scaling the greening programme: over a billion trees and shrubs planted nationwide, green cover up from 8% in 2020 to 14.3% in 2025, and 266 million saplings planted in 2025 alone.",
+      "source": "Ministry of Ecology (gov.uz)",
+      "date": "2026",
+      "category": "forests",
+      "url": "https://gov.uz/en/eco/news/view/113867"
+    },
+    {
+      "title": "Beyond Tashkent: air quality is a national problem - are policies keeping up?",
+      "description": "A hard look at PM2.5 across ALL regions, not just the capital - exactly the gap regional monitoring platforms exist to close.",
+      "source": "Kun.uz",
+      "date": "Dec 2025",
+      "category": "air",
+      "url": "https://kun.uz/en/news/2025/12/22/beyond-tashkent-air-quality-is-a-national-problem-are-policies-keeping-up"
+    },
+    {
+      "title": "UNEP: regional action needed to protect Uzbekistan from sand and dust storms",
+      "description": "The UN Environment Programme's report names sand-and-dust storms off the Aralkum as the driver of Uzbekistan's most severe PM10/PM2.5 spikes, with Termez hit hardest - and calls for cross-border early-warning cooperation.",
+      "source": "UNEP",
+      "date": "Dec 2025",
+      "category": "climate",
+      "url": "https://www.unep.org/news-and-stories/press-release/regional-action-needed-protect-uzbekistan-sand-and-dust-storms-warns"
+    },
+    {
+      "title": "World Bank: air-quality assessment for Tashkent and a national AQM roadmap",
+      "description": "Tashkent's annual PM2.5 runs about six times the WHO guideline; heating (28%), transport (16%) and industry (13%) lead the human-made sources. The roadmap sets out standards, monitoring and sector measures for 2025 onwards.",
+      "source": "World Bank",
+      "date": "2025",
+      "category": "air",
+      "url": "https://www.worldbank.org/en/country/uzbekistan/publication/air-quality-assessment-for-tashkent"
+    }
+  ]
+}

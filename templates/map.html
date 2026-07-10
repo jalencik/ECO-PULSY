@@ -22,10 +22,6 @@
   <div class="banner banner-error">{{ t('banner.error_dashboard') }}</div>
 {% else %}
 
-<section class="card map-card">
-  <div id="map-canvas" role="application" aria-label="{{ t('map.title') }}"></div>
-</section>
-
 <div class="map-legend">
   <span class="map-legend-title">{{ t('map.legend_title') }}</span>
   <span class="map-legend-item"><i class="map-dot aqi-good"></i>{{ t('aqi.label.Good') }}</span>
@@ -36,6 +32,10 @@
   <span class="map-legend-item"><i class="map-dot aqi-hazardous"></i>{{ t('aqi.label.Hazardous') }}</span>
   <span class="map-legend-item"><i class="map-dot map-dot-district"></i>{{ t('map.legend_district') }}</span>
 </div>
+
+<section class="card map-card">
+  <div id="map-canvas" role="application" aria-label="{{ t('map.title') }}"></div>
+</section>
 <p class="muted small">{{ t('map.attribution_note') }}</p>
 
 <script type="application/json" id="map-markers">{{ markers | tojson }}</script>
@@ -45,6 +45,7 @@
    "viewDetails": {{ t('map.view_details') | tojson }}, "measuredAt": {{ t('region.measured_at') | tojson }},
    "aqiHint": {{ t('aqi.hint') | tojson }}}
 </script>
+<script src="{{ url_for('static', filename='js/basemap.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/map.js') }}" defer></script>
 
 {% endif %}

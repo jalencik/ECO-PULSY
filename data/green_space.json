@@ -1,0 +1,44 @@
+{
+  "_comment": "Official Yashil Makon (Green Space) national programme figures, curated manually from government and press sources (each milestone links to its source). Update this file as new official numbers are announced - nothing here is generated.",
+  "national": {
+    "total_planted_since_2021": 1000000000,
+    "planted_2025": 266000000,
+    "annual_target": 200000000,
+    "green_cover_2020_pct": 8,
+    "green_cover_2025_pct": 14.3,
+    "aral_green_ha_by_2026": 2500000,
+    "aral_green_pct_2026": 78,
+    "plan_2026_2030_forest_ha": 1270000,
+    "plan_2026_2030_belts_ha": 16000
+  },
+  "milestones": [
+    {
+      "title": "Uzbekistan to restore 1.27 million hectares of forests and develop a 'desert economy'",
+      "description": "The 2026-2030 plan: new and restored forests on 1.27 million hectares plus 16,000 hectares of protective forest belts in desert, mountain and foothill zones - with green cover on the dried Aral seabed reaching 2.5 million hectares (78%) by the end of 2026.",
+      "source": "Gazeta.uz",
+      "date": "Jul 2026",
+      "url": "https://www.gazeta.uz/en/2026/07/06/aral-desert/"
+    },
+    {
+      "title": "President plants the first trees of the National Dendrological Park",
+      "description": "A flagship 2026 addition to the programme: a national dendrological park designed to hold thousands of tree species and anchor Tashkent's green belt.",
+      "source": "Gazeta.uz",
+      "date": "Apr 2026",
+      "url": "https://www.gazeta.uz/en/2026/04/02/national-dendropark/"
+    },
+    {
+      "title": "Yashil Makon expands as a foundation of green growth",
+      "description": "The Ministry of Ecology on scaling the programme beyond the original 200-million-saplings-a-year target: more than a billion trees and shrubs planted nationwide, lifting green cover from 8% in 2020 to 14.3% in 2025.",
+      "source": "Ministry of Ecology (gov.uz)",
+      "date": "2026",
+      "url": "https://gov.uz/en/eco/news/view/113867"
+    },
+    {
+      "title": "National Dendrological Park project launched",
+      "description": "The presidential announcement of the park project - the official record of one of the programme's most visible 2026 initiatives.",
+      "source": "President.uz",
+      "date": "2026",
+      "url": "https://president.uz/en/lists/view/9067"
+    }
+  ]
+}

@@ -8,7 +8,7 @@
   "use strict";
 
   var canvas = document.getElementById("hurricane-map-canvas");
-  if (!canvas || typeof L === "undefined") return;
+  if (!canvas || typeof L === "undefined" || !window.EcoBasemap) return;
 
   var pointsEl = document.getElementById("storm-points");
   var storms = pointsEl ? JSON.parse(pointsEl.textContent) : [];
@@ -22,10 +22,8 @@
     // for the full explanation) so it's left off.
     scrollWheelZoom: false, touchZoom: true, tap: false, minZoom: 2,
   });
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors",
-    maxZoom: 10, minZoom: 2,
-  }).addTo(map);
+  // Theme-aware, English-labelled basemap (see basemap.js).
+  window.EcoBasemap.attach(map, { maxZoom: 10, minZoom: 2 });
 
   canvas.addEventListener("mouseenter", function () { map.scrollWheelZoom.enable(); });
   canvas.addEventListener("mouseleave", function () { map.scrollWheelZoom.disable(); });

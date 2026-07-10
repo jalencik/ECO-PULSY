@@ -1,17 +1,20 @@
 """Public pages, the dashboard, region and district pages, and the
 small JSON API that powers the cascading location picker."""
+import json
 import math
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
-from flask import (Blueprint, abort, current_app, g, jsonify, redirect,
-                   render_template, request, url_for)
+from flask import (Blueprint, abort, current_app, flash, g, jsonify,
+                   redirect, render_template, request, url_for)
 from flask_login import current_user, login_required
 
 from extensions import db
-from models import Location
+from models import Location, TreePledge
 from services import hurricanes as hurricanes_service
 from services import news as news_service
 from services import openmeteo
+from services import storms as storms_service
 from services import wildfires as wildfires_service
 from services.regions import (REGIONS, dataset_key_for_slug, get_region,
                               region_display_name, slug_for_dataset_key)
@@ -269,8 +272,143 @@ def map_view():
 @login_required
 def wildfires():
     """Active wildfire hotspots worldwide, from NASA FIRMS satellite
-    detections (see services/wildfires.py). Real detections only."""
-    return render_template("wildfires.html", wildfires=wildfires_service.get_wildfires())
+    detections (see services/wildfires.py). Real detections only, plus
+    a same-day fire-danger index for Uzbekistan computed from the
+    overview cache (no extra API calls)."""
+    data = wildfires_service.get_wildfires()
+    points = data.get("points") or []
+    fire_stats = {
+        "peak_frp": int(round(max((p.get("frp") or 0) for p in points))) if points else 0,
+        "high_count": sum(1 for p in points if p.get("confidence") in ("h", "high")),
+    }
+    return render_template("wildfires.html", wildfires=data, fire_stats=fire_stats,
+                           fire_risk=_uzbekistan_fire_risk())
+
+
+def _uzbekistan_fire_risk():
+    """Per-region fire-weather danger from data already in the overview.
+
+    Uses the Angstrom index, a standard same-day fire-occurrence
+    indicator computed from just air temperature and relative humidity:
+        I = (humidity / 20) + ((27 - temperature) / 10)
+    Below 2.0 fire occurrence is very likely (red); 2.0-2.4 likely
+    (orange); 2.5-4.0 possible (yellow); above 4.0 unlikely (green).
+    On top of that, a region that is BOTH fire-prone (I < 2.5) and windy
+    (>= 25 km/h) gets a stubble-burning warning flag - burning crop
+    residue ("ang'iz yoqish") in dry wind is the top human cause of
+    field fires in Uzbekistan, and wind is what turns one into a blaze.
+
+    Costs nothing: every number comes from the cached overview the
+    dashboard already maintains - zero additional API calls.
+    """
+    overview = openmeteo.get_overview()
+    rows = []
+    for r in overview.get("regions", []):
+        temp, humidity, wind = r.get("temp"), r.get("humidity"), r.get("wind")
+        if temp is None or humidity is None:
+            continue
+        index = (humidity / 20.0) + ((27.0 - temp) / 10.0)
+        if index < 2.0:
+            tier = "red"
+        elif index < 2.5:
+            tier = "orange"
+        elif index <= 4.0:
+            tier = "yellow"
+        else:
+            tier = "green"
+        rows.append({
+            "slug": r["slug"], "name": r["name"],
+            "index": round(index, 1), "tier": tier,
+            "wind": wind,
+            "burn_warning": index < 2.5 and (wind or 0) >= 25,
+        })
+    rows.sort(key=lambda x: x["index"])
+    return {
+        "regions": rows,
+        "demo": overview.get("demo", False),
+        "alert_count": sum(1 for x in rows if x["tier"] in ("red", "orange")),
+        "burn_warnings": [x for x in rows if x["burn_warning"]],
+    }
+
+
+@views_bp.route("/storms")
+@login_required
+def storms():
+    """Uzbekistan squall / dust-storm early warning: 24-hour peak wind
+    gusts, dust load and pressure falls for all 14 regions, from
+    Open-Meteo's free forecast APIs (see services/storms.py). This is
+    the landlocked answer to a 'hurricanes' page: what actually hits
+    Uzbekistan are violent wind squalls (dovul) and Aralkum dust
+    storms, and both are forecastable."""
+    return render_template("storms.html", storms=storms_service.get_storms())
+
+
+_GREEN_SPACE_PATH = Path(__file__).parent / "data" / "green_space.json"
+_green_space_cache = None
+
+
+def _green_space():
+    global _green_space_cache
+    if _green_space_cache is None:
+        try:
+            _green_space_cache = json.loads(_GREEN_SPACE_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            _green_space_cache = {"national": {}, "milestones": []}
+    return _green_space_cache
+
+
+MAX_PLEDGE_TREES = 1000
+
+
+@views_bp.route("/trees", methods=["GET", "POST"])
+@login_required
+def trees():
+    """Yashil Makon (Green Space) tracker.
+
+    Two honest layers, clearly separated in the UI:
+    1. OFFICIAL programme figures (1B+ trees since 2021, green-cover
+       percentages, the Aral seabed greening target) from a curated,
+       source-linked dataset - data/green_space.json - updated by hand
+       as new official numbers are announced. Nothing is invented.
+    2. The EcoPulse COMMUNITY counter: signed-in members log trees they
+       have actually planted (capped at 1..1000 per entry so a typo
+       can't fabricate a forest). Stored in the tree_pledges table.
+    """
+    if request.method == "POST":
+        try:
+            count = int(request.form.get("count", ""))
+        except ValueError:
+            count = 0
+        region_slug = request.form.get("region") or None
+        if region_slug and get_region(region_slug) is None:
+            region_slug = None
+        if 1 <= count <= MAX_PLEDGE_TREES:
+            db.session.add(TreePledge(user_id=current_user.id, count=count,
+                                      region_slug=region_slug))
+            db.session.commit()
+            flash("flash.pledge_saved", "message")
+        else:
+            flash("flash.pledge_invalid", "error")
+        return redirect(url_for("views.trees"))
+
+    community_total = db.session.query(
+        db.func.coalesce(db.func.sum(TreePledge.count), 0)).scalar()
+    pledge_count = db.session.query(db.func.count(TreePledge.id)).scalar()
+    recent = [
+        {"user_name": p.user.name, "count": p.count, "created_at": p.created_at,
+         "region": get_region(p.region_slug) if p.region_slug else None}
+        for p in (TreePledge.query.order_by(TreePledge.created_at.desc())
+                  .limit(8).all())
+    ]
+
+    return render_template(
+        "trees.html",
+        green=_green_space(),
+        community_total=community_total,
+        pledge_count=pledge_count,
+        recent_pledges=recent,
+        max_pledge=MAX_PLEDGE_TREES,
+    )
 
 
 @views_bp.route("/hurricanes")

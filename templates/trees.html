@@ -1,0 +1,121 @@
+{% extends "app_base.html" %}
+{% block title %}{{ t('trees.title') }} — EcoPulse{% endblock %}
+{% block page_title %}{{ t('trees.title') }}{% endblock %}
+{% block page_sub %}{{ t('trees.sub') }}{% endblock %}
+
+{% block main %}
+{% include "_flash.html" %}
+{% set n = green.national %}
+
+{# ---- Official programme figures (source-linked, curated by hand) ---- #}
+<div class="stat-row stat-row-4">
+  <div class="stat-card">
+    <span class="stat-icon"><svg width="20" height="20"><use href="#i-tree"/></svg></span>
+    <span class="stat-label">{{ t('trees.total_label') }}</span>
+    <span class="stat-value">1B<small>+</small></span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon"><svg width="20" height="20"><use href="#i-tree"/></svg></span>
+    <span class="stat-label">{{ t('trees.planted_2025') }}</span>
+    <span class="stat-value">266M</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon"><svg width="20" height="20"><use href="#i-activity"/></svg></span>
+    <span class="stat-label">{{ t('trees.cover_label') }}</span>
+    <span class="stat-value">{{ n.green_cover_2025_pct }}% <small>← {{ n.green_cover_2020_pct }}% (2020)</small></span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon"><svg width="20" height="20"><use href="#i-pin"/></svg></span>
+    <span class="stat-label">{{ t('trees.aral_label') }}</span>
+    <span class="stat-value">2.5M <small>ha · {{ n.aral_green_pct_2026 }}%</small></span>
+  </div>
+</div>
+
+{# ---- Community counter + pledge form -------------------------------- #}
+<div class="detail-grid">
+  <section class="card">
+    <h2 class="card-title">{{ t('trees.community_title') }}</h2>
+    <div class="community-counter">
+      <span class="community-total">{{ '{:,}'.format(community_total).replace(',', ' ') }}</span>
+      <span class="muted">{{ t('trees.community_sub', pledges=pledge_count) }}</span>
+    </div>
+
+    <form method="post" class="pledge-form">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <label for="pledge-count">{{ t('trees.pledge_label') }}</label>
+      <div class="pledge-row">
+        <input id="pledge-count" name="count" type="number" min="1" max="{{ max_pledge }}" required
+               placeholder="10">
+        <select name="region" aria-label="{{ t('trees.pledge_region') }}">
+          <option value="">{{ t('trees.pledge_region') }}</option>
+          {% for r in REGIONS %}
+          <option value="{{ r.slug }}">{{ rname(r) }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-primary" type="submit">{{ t('trees.pledge_button') }}</button>
+      </div>
+      <p class="muted small">{{ t('trees.pledge_hint', max=max_pledge) }}</p>
+    </form>
+
+    {% if recent_pledges %}
+    <div class="pledge-feed">
+      {% for p in recent_pledges %}
+      <div class="pledge-item">
+        <span class="pledge-icon"><svg width="14" height="14"><use href="#i-tree"/></svg></span>
+        <span class="pledge-text">{{ t('trees.pledge_entry', name=p.user_name, count=p.count) }}{% if p.region %} · {{ rname(p.region) }}{% endif %}</span>
+        <span class="muted small">{{ p.created_at.strftime('%d %b') }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2 class="card-title">{{ t('trees.calc_title') }}</h2>
+    <p class="muted small">{{ t('trees.calc_sub') }}</p>
+    <div class="tree-calc">
+      <input id="tree-calc-input" type="number" min="1" max="1000000" value="10"
+             aria-label="{{ t('trees.calc_input') }}">
+      <div class="tree-calc-results">
+        <div><strong id="tree-calc-co2">220</strong> <span class="muted small">{{ t('trees.calc_co2') }}</span></div>
+        <div><strong id="tree-calc-cars">0.05</strong> <span class="muted small">{{ t('trees.calc_cars') }}</span></div>
+      </div>
+    </div>
+    <p class="muted small">{{ t('trees.calc_note') }}</p>
+  </section>
+</div>
+
+{# ---- Programme milestones (each links to its official source) ------- #}
+<div class="section-heading">
+  <h2>{{ t('trees.milestones_title') }}</h2>
+  <p class="muted small">{{ t('trees.milestones_sub') }}</p>
+</div>
+<div class="news-grid news-grid-curated">
+  {% for m in green.milestones %}
+  <a class="news-card news-card-story" href="{{ m.url }}" target="_blank" rel="noopener noreferrer">
+    <div class="news-body">
+      <div class="story-tags">
+        <span class="story-cat story-cat-forests">{{ t('news.cat.forests') }}</span>
+        <span class="story-year">{{ m.date }}</span>
+      </div>
+      <h3>{{ m.title }}</h3>
+      <p class="muted small">{{ m.description }}</p>
+      <div class="news-meta">
+        <span>{{ m.source }}</span>
+        <span class="story-read">{{ t('news.read_story') }} ↗</span>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+
+<section class="card info-note">
+  <span class="info-note-icon"><svg width="20" height="20"><use href="#i-tree"/></svg></span>
+  <div>
+    <h2 class="card-title">{{ t('trees.why_title') }}</h2>
+    <p class="muted">{{ t('trees.why_body') }}</p>
+  </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/trees.js') }}" defer></script>
+{% endblock %}
