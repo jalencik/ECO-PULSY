@@ -11,7 +11,7 @@
   "use strict";
 
   var canvas = document.getElementById("map-canvas");
-  if (!canvas || typeof L === "undefined") return;
+  if (!canvas || typeof L === "undefined" || !window.EcoBasemap) return;
 
   var markersEl = document.getElementById("map-markers");
   var districtsEl = document.getElementById("map-districts");
@@ -67,11 +67,8 @@
     maxBoundsViscosity: 0.8,
     minZoom: 5,
   });
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors",
-    maxZoom: 15,
-    minZoom: 5,
-  }).addTo(map);
+  // Theme-aware, English-labelled basemap (see basemap.js).
+  window.EcoBasemap.attach(map, { maxZoom: 15, minZoom: 5 });
 
   // Trackpad "pinch" gestures (and plain mouse wheel) only zoom the map
   // while the cursor is actually over it - otherwise scrolling the page

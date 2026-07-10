@@ -9,6 +9,60 @@
 {% endblock %}
 
 {% block main %}
+{# ---- Uzbekistan same-day fire danger (from the overview cache) ------ #}
+{% if fire_risk.regions %}
+{% if fire_risk.demo %}
+  <div class="banner banner-info">{{ t('banner.demo') }}</div>
+{% endif %}
+<section class="card">
+  <div class="role-head">
+    <h2 class="card-title">{{ t('firerisk.title') }}</h2>
+    <div class="role-switch" role="tablist">
+      <button type="button" class="role-btn" data-role-select="public">{{ t('role_switch.public') }}</button>
+      <button type="button" class="role-btn" data-role-select="farmer">{{ t('role_switch.farmer') }}</button>
+      <button type="button" class="role-btn" data-role-select="expert">{{ t('role_switch.expert') }}</button>
+    </div>
+  </div>
+  <p class="muted small">{{ t('firerisk.sub') }}</p>
+
+  {% if fire_risk.burn_warnings %}
+  {% set burn_names = [] %}
+  {% for x in fire_risk.burn_warnings %}{% if burn_names.append(rname(x)) %}{% endif %}{% endfor %}
+  <div class="banner banner-error">{{ t('firerisk.burn_banner', regions=burn_names | join(', ')) }}</div>
+  {% endif %}
+
+  <div class="fire-grid">
+    {% for r in fire_risk.regions %}
+    <a class="fire-chip fire-{{ r.tier }}" href="{{ url_for('views.region', slug=r.slug) }}"
+       title="{{ t('firerisk.index_tooltip', index=r.index) }}">
+      <span class="fire-chip-name">{{ rname(r) }}</span>
+      <strong>{{ r.index }}</strong>
+    </a>
+    {% endfor %}
+  </div>
+
+  <div data-role-view="public">
+    <ul class="advice-list">
+      <li>{{ t('firerisk.advice.public.1') }}</li>
+      <li>{{ t('firerisk.advice.public.2') }}</li>
+    </ul>
+  </div>
+  <div data-role-view="farmer" hidden>
+    <ul class="advice-list">
+      <li>{{ t('firerisk.advice.farmer.1') }}</li>
+      <li>{{ t('firerisk.advice.farmer.2') }}</li>
+    </ul>
+  </div>
+  <div data-role-view="expert" hidden>
+    <ul class="advice-list">
+      <li>{{ t('firerisk.advice.expert.1') }}</li>
+      <li>{{ t('firerisk.advice.expert.2') }}</li>
+    </ul>
+  </div>
+  <p class="muted small">{{ t('firerisk.method') }}</p>
+</section>
+{% endif %}
+
 {% if not wildfires.configured %}
   <div class="banner banner-info">{{ t('wildfires.not_configured') }}</div>
 {% elif wildfires.error and not wildfires.points %}
@@ -18,16 +72,26 @@
     <div class="banner banner-info">{{ t('wildfires.stale') }}</div>
   {% endif %}
 
-  <div class="stat-row stat-row-2">
+  <div class="stat-row stat-row-4">
     <div class="stat-card">
       <span class="stat-icon"><svg width="20" height="20"><use href="#i-flame"/></svg></span>
       <span class="stat-label">{{ t('wildfires.total_label') }}</span>
       <span class="stat-value">{{ wildfires.total }}</span>
     </div>
     <div class="stat-card">
-      <span class="stat-icon"><svg width="20" height="20"><use href="#i-gauge"/></svg></span>
+      <span class="stat-icon"><svg width="20" height="20"><use href="#i-map"/></svg></span>
       <span class="stat-label">{{ t('wildfires.shown_label') }}</span>
       <span class="stat-value">{{ wildfires.points | length }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon stat-icon-alert-orange"><svg width="20" height="20"><use href="#i-gauge"/></svg></span>
+      <span class="stat-label">{{ t('wildfires.peak_label') }}</span>
+      <span class="stat-value">{{ fire_stats.peak_frp }} <small>MW</small></span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon stat-icon-alert-red"><svg width="20" height="20"><use href="#i-activity"/></svg></span>
+      <span class="stat-label">{{ t('wildfires.high_label') }}</span>
+      <span class="stat-value">{{ fire_stats.high_count }}</span>
     </div>
   </div>
 
@@ -44,9 +108,18 @@
 
   <script type="application/json" id="wildfire-points">{{ wildfires.points | tojson }}</script>
   <script type="application/json" id="wildfire-i18n">{"frpLabel": {{ t('wildfires.frp_label') | tojson }}}</script>
+  <script src="{{ url_for('static', filename='js/basemap.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/wildfires-map.js') }}" defer></script>
   {% else %}
   <p class="muted">{{ t('wildfires.no_data') }}</p>
   {% endif %}
 {% endif %}
+
+<section class="card info-note">
+  <span class="info-note-icon"><svg width="20" height="20"><use href="#i-flame"/></svg></span>
+  <div>
+    <h2 class="card-title">{{ t('wildfires.why_title') }}</h2>
+    <p class="muted">{{ t('wildfires.why_body') }}</p>
+  </div>
+</section>
 {% endblock %}

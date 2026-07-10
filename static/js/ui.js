@@ -59,6 +59,66 @@
     img.classList.add("news-thumb-empty");
   }, true);
 
+  // --- Owner-only secret reveal (admin panel) --------------------------------
+  // The leadership roster (#admin-roster) is only ever rendered into the
+  // page for the owner (server-side gate in admin.py), hidden by default.
+  // Typing the secret word anywhere on the page (not inside an input)
+  // toggles it. For every other visitor this whole block is inert -
+  // the element simply doesn't exist in their DOM.
+  var secretSection = document.getElementById("admin-roster");
+  if (secretSection) {
+    var SECRET_WORD = "administor";
+    var typedBuffer = "";
+    document.addEventListener("keydown", function (e) {
+      var target = e.target;
+      var tag = target && target.tagName ? target.tagName.toLowerCase() : "";
+      if (tag === "input" || tag === "textarea" || tag === "select" || (target && target.isContentEditable)) return;
+      if (!e.key || e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return;
+      typedBuffer = (typedBuffer + e.key.toLowerCase()).slice(-SECRET_WORD.length);
+      if (typedBuffer === SECRET_WORD) {
+        typedBuffer = "";
+        secretSection.hidden = !secretSection.hidden;
+        if (!secretSection.hidden) {
+          secretSection.classList.remove("roster-reveal");
+          void secretSection.offsetWidth; // restart the reveal animation
+          secretSection.classList.add("roster-reveal");
+          secretSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+    });
+  }
+
+  // --- Audience role switcher (Public / Farmer / Expert) ---------------------
+  // The same forecast means different actions for a parent, a farmer and
+  // an analyst. Pages with role-specific guidance render ALL variants
+  // server-side (so translations and CSP stay simple) inside
+  // [data-role-view="public|farmer|expert"] blocks; these buttons just
+  // toggle which one is visible. The choice is remembered per device.
+  var roleButtons = document.querySelectorAll("[data-role-select]");
+  if (roleButtons.length) {
+    var applyRole = function (role) {
+      roleButtons.forEach(function (b) {
+        b.classList.toggle("active", b.dataset.roleSelect === role);
+      });
+      document.querySelectorAll("[data-role-view]").forEach(function (el) {
+        el.hidden = el.dataset.roleView !== role;
+      });
+    };
+    var savedRole;
+    try { savedRole = localStorage.getItem("ecopulse-role"); } catch (e) { savedRole = null; }
+    if (savedRole !== "public" && savedRole !== "farmer" && savedRole !== "expert") {
+      savedRole = "public";
+    }
+    applyRole(savedRole);
+    roleButtons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var role = btn.dataset.roleSelect;
+        applyRole(role);
+        try { localStorage.setItem("ecopulse-role", role); } catch (e) {}
+      });
+    });
+  }
+
   // --- CSP-safe confirm dialogs (replaces inline onsubmit) ------------------
   document.querySelectorAll("form[data-confirm]").forEach(function (form) {
     form.addEventListener("submit", function (event) {

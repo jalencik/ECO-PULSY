@@ -1,5 +1,6 @@
 """Administrator & Owner panel."""
 import math
+import os
 import time
 from functools import wraps
 
@@ -16,10 +17,22 @@ admin_bp = Blueprint("admin", __name__)
 # What admins (not the owner) are shown as the admin count, by request.
 ADMIN_VISIBLE_ADMIN_COUNT = 2
 
-# The owner/queen table can have 600+ rows (300 real + 300 demo). Paginate
+# The owner/queen table can have hundreds of rows (real + demo). Paginate
 # it server-side instead of rendering every row on every load - the page
 # was one of the slowest in the app before this.
 PAGE_SIZE = 50
+
+# Badge colour per real role - only ever used in views that are allowed
+# to show real ranks (the owner's table and the owner-only roster).
+_ROLE_BADGE_CLASSES = {
+    "owner": "role-owner",
+    "queen": "role-queen",
+    "admin": "role-admin",
+    "user": "role-user",
+}
+
+# Sort order for the owner-only leadership roster.
+_ROSTER_ORDER = {"owner": 0, "queen": 1, "admin": 2}
 
 
 def admin_required(view):
@@ -87,7 +100,8 @@ def panel():
                   .offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE).all())
 
     if current_user.is_owner:
-        rows = [{"user": u, "role_label": u.role_label, "badge": u.is_admin} for u in page_users]
+        rows = [{"user": u, "role_label": u.role_label, "badge": u.is_admin,
+                 "role_class": _ROLE_BADGE_CLASSES.get(u.role, "role-user")} for u in page_users]
     elif current_user.is_queen:
         rows = []
         for u in page_users:
@@ -105,6 +119,22 @@ def panel():
             else:
                 rows.append({"user": u, "role_label": "Member", "badge": False})
 
+    # Owner-only hidden leadership roster: every account that holds a
+    # real rank (owner, queen, administrators), with true role labels.
+    # It is rendered into the page but stays hidden until the owner
+    # types the secret word (see the reveal listener in ui.js); for
+    # anyone else the data is never queried and never leaves the server.
+    admin_roster = None
+    if current_user.is_owner:
+        roster_users = User.query.filter(
+            User.role.in_(("admin", "owner", "queen"))).all()
+        roster_users.sort(key=lambda u: (_ROSTER_ORDER.get(u.role, 3), u.name.lower()))
+        admin_roster = [
+            {"user": u, "role_label": u.role_label,
+             "role_class": _ROLE_BADGE_CLASSES.get(u.role, "role-user")}
+            for u in roster_users
+        ]
+
     return render_template(
         "admin.html",
         is_owner=current_user.is_owner,
@@ -116,6 +146,7 @@ def panel():
         page=page,
         total_pages=total_pages,
         start_index=(page - 1) * PAGE_SIZE,
+        admin_roster=admin_roster,
     )
 
 
@@ -207,4 +238,27 @@ def diagnostics():
         "Wildfire key present": bool(current_app.config.get("FIRMS_MAP_KEY")),
         "Prefetch interval (min)": current_app.config["PREFETCH_MINUTES"],
     }
-    return render_template("diagnostics.html", tests=tests, state=state)
+
+    # Database persistence check. This exists to answer, at a glance,
+    # "where are my users actually stored and will they survive the next
+    # redeploy?" - PostgreSQL (Supabase) persists forever; a SQLite file
+    # on Render lives on ephemeral disk and is WIPED on every deploy or
+    # restart, which silently loses every account created since the last
+    # deploy. The user-count breakdown (real vs demo) is owner-only, so
+    # this page never leaks the demo-account mechanism to plain admins.
+    dialect = db.engine.dialect.name
+    on_render = bool(os.environ.get("RENDER"))
+    db_info = {
+        "dialect": dialect,
+        "engine_label": "PostgreSQL (Supabase)" if dialect == "postgresql" else dialect.upper(),
+        "host": db.engine.url.host or "local file (instance/ecopulse.db)",
+        "persistent": dialect == "postgresql",
+        "at_risk": on_render and dialect != "postgresql",
+    }
+    if current_user.is_owner:
+        from models import User
+        db_info["real_users"] = User.query.filter_by(is_fake=False).count()
+        db_info["demo_users"] = User.query.filter_by(is_fake=True).count()
+        db_info["total_users"] = db_info["real_users"] + db_info["demo_users"]
+
+    return render_template("diagnostics.html", tests=tests, state=state, db_info=db_info)

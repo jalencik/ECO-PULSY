@@ -4,16 +4,46 @@
 {% block page_sub %}{{ t('news.sub') }}{% endblock %}
 
 {% block main %}
-{% if not news.configured %}
-  <div class="banner banner-info">{{ t('news.not_configured') }}</div>
-{% elif news.error and not news.articles %}
-  <div class="banner banner-error">{{ t('news.unavailable') }}</div>
-{% else %}
+
+{# ------ Uzbekistan this year: 2026 plans & initiatives --------------- #}
+{% if news.uzbekistan %}
+<div class="section-heading">
+  <h2>{{ t('news.uz_title') }}</h2>
+  <p class="muted small">{{ t('news.uz_sub') }}</p>
+</div>
+<div class="news-grid news-grid-curated">
+  {% for s in news.uzbekistan %}
+  <a class="news-card news-card-story news-card-uz" href="{{ s.url }}" target="_blank" rel="noopener noreferrer">
+    <div class="news-body">
+      <div class="story-tags">
+        <span class="story-cat story-cat-{{ s.category }}">{{ t('news.cat.' + s.category) }}</span>
+        <span class="story-year">{{ s.date }}</span>
+      </div>
+      <h3>{{ s.title }}</h3>
+      <p class="muted small">{{ s.description }}</p>
+      <div class="news-meta">
+        <span>{{ s.source }}</span>
+        <span class="story-read">{{ t('news.read_story') }} ↗</span>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+{# ------ Live headlines (only when the Currents API key is set) ------- #}
+{% if news.configured %}
   {% if news.stale %}
     <div class="banner banner-info">{{ t('news.stale') }}</div>
+  {% elif news.error and not news.articles %}
+    <div class="banner banner-info">{{ t('news.unavailable') }}</div>
   {% endif %}
 
   {% if news.articles %}
+  <div class="section-heading">
+    <h2>{{ t('news.live_title') }}</h2>
+    <p class="muted small">{{ t('news.live_sub') }}</p>
+  </div>
   <div class="news-grid">
     {% for a in news.articles %}
     <a class="news-card" href="{{ a.url }}" target="_blank" rel="noopener noreferrer">
@@ -35,8 +65,47 @@
     {% endfor %}
   </div>
   <p class="muted small news-attribution">{{ t('news.attribution') }}</p>
-  {% else %}
-  <p class="muted">{{ t('news.no_articles') }}</p>
   {% endif %}
 {% endif %}
+
+{# ------ Curated library: 100+ landmark environmental stories --------- #}
+{% if news.curated %}
+<div class="section-heading">
+  <h2>{{ t('news.curated_title') }}</h2>
+  <p class="muted small">{{ t('news.curated_sub', count=news.curated | length) }}</p>
+</div>
+
+{% set categories = news.curated | map(attribute='category') | unique | list %}
+<div class="news-filters" role="tablist">
+  <button type="button" class="news-filter active" data-category="all">{{ t('news.filter_all') }}</button>
+  {% for cat in categories %}
+  <button type="button" class="news-filter" data-category="{{ cat }}">{{ t('news.cat.' + cat) }}</button>
+  {% endfor %}
+</div>
+
+<div class="news-grid news-grid-curated" id="curated-grid">
+  {% for s in news.curated %}
+  <a class="news-card news-card-story" data-category="{{ s.category }}"
+     href="{{ s.url }}" target="_blank" rel="noopener noreferrer">
+    <div class="news-body">
+      <div class="story-tags">
+        <span class="story-cat story-cat-{{ s.category }}">{{ t('news.cat.' + s.category) }}</span>
+        <span class="story-year">{{ s.year }}</span>
+      </div>
+      <h3>{{ s.title }}</h3>
+      <p class="muted small">{{ s.description }}</p>
+      <div class="news-meta">
+        <span>{{ s.source }}</span>
+        <span class="story-read">{{ t('news.read_story') }} ↗</span>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+<p class="muted small news-attribution">{{ t('news.curated_attribution') }}</p>
+{% elif not news.configured %}
+<div class="banner banner-info">{{ t('news.not_configured') }}</div>
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/news.js') }}" defer></script>
 {% endblock %}

@@ -111,3 +111,31 @@ class Snapshot(db.Model):
 
     def __repr__(self) -> str:
         return f"<Snapshot {self.key}>"
+
+
+class TreePledge(db.Model):
+    """One 'I planted N trees' entry logged by a signed-in member.
+
+    Powers the community counter on the /trees (Yashil Makon) page: the
+    official national figures come from a curated dataset, while this
+    table is EcoPulse's own contribution layer - real members logging
+    the trees they actually planted. Counts are capped per submission
+    in the view (1..1000) so a typo can't fabricate a forest.
+    """
+
+    __tablename__ = "tree_pledges"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"),
+                        nullable=False, index=True)
+    count = db.Column(db.Integer, nullable=False)
+    region_slug = db.Column(db.String(40), nullable=True)
+    created_at = db.Column(
+        db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+
+    user = db.relationship("User", backref=db.backref("tree_pledges", lazy="dynamic",
+                                                      cascade="all, delete-orphan"))
+
+    def __repr__(self) -> str:
+        return f"<TreePledge {self.count} by user {self.user_id}>"

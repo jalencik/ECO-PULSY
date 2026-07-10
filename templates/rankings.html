@@ -16,6 +16,14 @@
   {%- endif -%}
 {%- endmacro %}
 
+{% macro metric_raw(metric, r) -%}
+  {%- if metric == 'hottest' -%}{{ r.temp if r.temp is not none else '' }}
+  {%- elif metric == 'humid' -%}{{ r.humidity if r.humidity is not none else '' }}
+  {%- elif metric == 'windy' -%}{{ r.wind if r.wind is not none else '' }}
+  {%- elif metric == 'polluted' -%}{{ r.aqi.value if r.aqi else '' }}
+  {%- endif -%}
+{%- endmacro %}
+
 {% if overview.demo %}
   <div class="banner banner-info">{{ t('banner.demo') }}</div>
 {% endif %}
@@ -24,20 +32,32 @@
 {% else %}
 
 <div class="ranking-tabs" role="tablist">
-  <button type="button" class="ranking-tab active" data-metric="hottest">{{ t('rankings.tab_hottest') }}</button>
-  <button type="button" class="ranking-tab" data-metric="polluted">{{ t('rankings.tab_polluted') }}</button>
-  <button type="button" class="ranking-tab" data-metric="humid">{{ t('rankings.tab_humid') }}</button>
-  <button type="button" class="ranking-tab" data-metric="windy">{{ t('rankings.tab_windy') }}</button>
+  <button type="button" class="ranking-tab active" data-metric="hottest">
+    <svg width="14" height="14"><use href="#i-sun"/></svg> {{ t('rankings.tab_hottest') }}
+  </button>
+  <button type="button" class="ranking-tab" data-metric="polluted">
+    <svg width="14" height="14"><use href="#i-gauge"/></svg> {{ t('rankings.tab_polluted') }}
+  </button>
+  <button type="button" class="ranking-tab" data-metric="humid">
+    <svg width="14" height="14"><use href="#i-drop"/></svg> {{ t('rankings.tab_humid') }}
+  </button>
+  <button type="button" class="ranking-tab" data-metric="windy">
+    <svg width="14" height="14"><use href="#i-wind"/></svg> {{ t('rankings.tab_windy') }}
+  </button>
 </div>
 
 {% for metric, regions in rankings.items() %}
 <section class="card ranking-panel {{ 'active' if loop.first }}" id="panel-{{ metric }}">
   <p class="muted small aqi-hint">{{ t('rankings.expand_hint') }}</p>
   {% for r in regions %}
-  <div class="rank-row" data-slug="{{ r.slug }}" data-metric="{{ metric }}" tabindex="0" role="button"
+  <div class="rank-row" data-slug="{{ r.slug }}" data-metric="{{ metric }}"
+       data-raw="{{ metric_raw(metric, r) }}" tabindex="0" role="button"
        aria-expanded="false">
-    <span class="rank-num">{{ loop.index }}</span>
-    <span class="rank-name">{{ rname(r) }}</span>
+    <span class="rank-num {{ 'rank-medal rank-medal-' ~ loop.index if loop.index <= 3 }}">{{ loop.index }}</span>
+    <span class="rank-main">
+      <span class="rank-name">{{ rname(r) }}</span>
+      <span class="rank-bar"><i></i></span>
+    </span>
     <span class="chip {{ r.aqi.css if metric == 'polluted' and r.aqi else ('chip-hot' if metric == 'hottest' else 'chip-neutral') }}">{{ metric_value(metric, r) }}</span>
     <svg class="rank-chevron" width="16" height="16"><use href="#i-arrow"/></svg>
   </div>

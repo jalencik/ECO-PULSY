@@ -14,6 +14,7 @@ import click
 from flask import Flask, abort, g, render_template, request, session
 from sqlalchemy import text
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.security import generate_password_hash
 
 from config import Config
 from extensions import cache, db, login_manager, scheduler
@@ -234,7 +235,7 @@ _NEW_USER_COLUMNS = {
     "latitude": "DOUBLE PRECISION",
     "longitude": "DOUBLE PRECISION",
     "location_label": "VARCHAR(80)",
-    # Marks the 300 seeded demo accounts (see _seed_fake_members). The
+    # Marks the seeded demo accounts (see _seed_fake_members). The
     # NOT NULL DEFAULT FALSE backfills every existing real row to False
     # in the same statement, so this is never NULL for anyone.
     "is_fake": "BOOLEAN NOT NULL DEFAULT FALSE",
@@ -336,8 +337,9 @@ def _seed_locations():
 
 
 def _seed_fake_members():
-    """Insert 300 clearly-marked demo member accounts, resyncing them
-    whenever the generator in services/fake_members.py changes.
+    """Top the users table up to TARGET_TOTAL_USERS with clearly-marked
+    demo member accounts, resyncing them whenever the generator in
+    services/fake_members.py changes.
 
     These are NOT real people:
     - role is always "user" and is_fake is always True
@@ -346,6 +348,11 @@ def _seed_fake_members():
     - admin.py filters is_fake accounts out entirely for plain admins
       (real count and rows only); the owner and the Queen fold them
       into the combined total instead.
+
+    The batch size is computed, not fixed: real (is_fake=False) rows
+    are counted first and only the gap up to TARGET_TOTAL_USERS is
+    generated, so the combined total always lands on the same round
+    number no matter how many real people have registered.
 
     A one-row marker in the snapshots table records which
     fake_members.DATASET_VERSION is currently live. On boot, if that
@@ -356,7 +363,8 @@ def _seed_fake_members():
     Real user rows (is_fake=False) are never touched or deleted.
     """
     from models import Snapshot, User
-    from services.fake_members import DATASET_VERSION, generate_fake_members
+    from services.fake_members import (DATASET_VERSION, TARGET_TOTAL_USERS,
+                                       generate_fake_members)
 
     marker = db.session.get(Snapshot, "fake_members_version")
     up_to_date = marker is not None and marker.payload.get("version") == DATASET_VERSION
@@ -367,9 +375,12 @@ def _seed_fake_members():
     # before regenerating so this stays a clean resync, not an add-on.
     User.query.filter_by(is_fake=True).delete(synchronize_session=False)
 
+    real_count = User.query.filter_by(is_fake=False).count()
+    needed = max(0, TARGET_TOTAL_USERS - real_count)
+
     existing_emails = {row[0] for row in db.session.query(User.email).all()}
     count = 0
-    for person in generate_fake_members(300):
+    for person in generate_fake_members(needed):
         if person["email"] in existing_emails:
             continue
         user = User(
@@ -377,7 +388,14 @@ def _seed_fake_members():
             birthdate=person["birthdate"], role="user", is_fake=True,
             created_at=person["created_at"],
         )
-        user.set_password(secrets.token_hex(16))
+        # A random password nobody knows, hashed with a deliberately cheap
+        # single-iteration PBKDF2. Real accounts get the strong default
+        # (set_password); these accounts can never be signed into anyway
+        # (the random password is discarded right here), and hashing 600+
+        # of them with the expensive default would stall boot for minutes
+        # - long enough to trip gunicorn's worker timeout on Render.
+        user.password_hash = generate_password_hash(
+            secrets.token_hex(16), method="pbkdf2:sha256:1")
         db.session.add(user)
         existing_emails.add(person["email"])
         count += 1
@@ -443,7 +461,7 @@ def _register_cli(app):
 
     @app.cli.command("seed-fake-members")
     def seed_fake_members():
-        """Insert or resync the 300 demo member accounts."""
+        """Insert or resync the demo member accounts (top-up to target total)."""
         count = _seed_fake_members()
         click.echo(f"Inserted {count} demo members." if count else "Demo members already up to date.")
 

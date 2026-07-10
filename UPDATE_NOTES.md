@@ -1,3 +1,105 @@
+# Update v12 — Uzbekistan problem-solving: storm & dust alerts, fire danger, Yashil Makon trees, 2026 news
+
+## New sections (all free APIs / curated data — zero cost)
+
+- **Storm alerts (`/storms`)** — the landlocked answer to a "hurricanes"
+  page. What actually hits Uzbekistan are violent squalls (dovul) and
+  Aralkum dust storms, so this page forecasts BOTH for all 14 regions,
+  24 hours ahead: peak wind gusts, dust load (µg/m³) and sharp
+  3-hour pressure falls (the classic squall precursor). Risk tiers
+  red/orange/yellow/green, severity-sorted table, squall/dust signal
+  tags. Data: Open-Meteo (free, keyless), 2 batched calls per 30 min,
+  cached with stale + database-snapshot fallback like everything else.
+- **Audience role switcher (Public / Farmer / Expert)** — on Storm
+  alerts and the new Fire danger card. The same forecast, three sets of
+  guidance: parents get "close the windows, mask up"; farmers get
+  "anchor the greenhouse now, don't spray, don't burn ang'iz"; experts
+  get thresholds, method and data sources. Choice remembered per device.
+- **Fire danger in Uzbekistan (on `/wildfires`)** — the Angström
+  fire-weather index computed live for every region from temperature +
+  humidity the app already has (zero extra API calls), colour-coded
+  region grid, and an automatic red "do NOT burn crop residue (ang'iz)
+  today in: …" banner whenever a region is both fire-prone and windy —
+  stubble burning being the #1 human cause of field fires here.
+- **Trees & green space (`/trees`)** — Yashil Makon programme dashboard
+  with OFFICIAL, source-linked figures (1B+ trees since 2021, 266M
+  saplings in 2025, green cover 8% → 14.3%, 2.5M ha of the Aral seabed
+  greened by end-2026) + an EcoPulse **community tree counter**: members
+  log trees they actually planted (1–1000 per entry, stored in the new
+  `tree_pledges` table, created automatically on deploy) with a live
+  feed and a CO₂ impact mini-calculator.
+- **"Uzbekistan this year" on `/news`** — 9 curated, link-verified 2026
+  stories (with the late-2025 reports behind them): the 1.27M-hectare
+  forest plan, Tashkent's eco-sticker low-emission zones from Jan 2026,
+  renewables hitting 5B kWh (+28%), the National Dendrological Park,
+  UNEP's dust-storm warning, the World Bank AQM roadmap. All open the
+  source in a new tab.
+
+Everything is fully translated (EN/UZ), works in demo mode, and the
+sidebar gained two entries: Storm alerts and Trees.
+
+---
+
+# Update v11 — secret roster, 970 members, curated news, pro maps & rankings
+
+## What changed
+
+- **Secret "administor" word (owner only).** On the admin panel, type
+  `administor` anywhere on the page (not inside a search box) and a
+  hidden **Leadership roster** card reveals every owner/queen/admin
+  account with its TRUE rank, gold/violet badges and one-click edit.
+  Type the word again to hide it. The card is only ever rendered into
+  the page for the owner — admins and the Queen have nothing to find,
+  even in view-source.
+- **970 members.** The demo-member seeder now TOPS UP the users table to
+  970 total: it counts the real accounts first and only generates the
+  difference, with unique Uzbek (78%), Russian (14%) and English (8%)
+  names — no repeats. Resyncs automatically on this deploy
+  (DATASET_VERSION 3). Only you and the Queen see the combined total;
+  plain admins still see real users only.
+- **User-count mystery + persistence.** `/admin/diagnostics` now has a
+  **Database & user persistence** panel: which engine you're on
+  (Supabase PostgreSQL vs SQLite), whether data survives redeploys, and
+  the exact real/demo/total user split (owner only). If the app is ever
+  running on temporary SQLite on Render, a red warning tells you exactly
+  what to set. Your 917-vs-615 mismatch: 917 = real users + 300 demo
+  rows in Supabase; the 615-ish number is the real-only count a plain
+  admin's view shows. Nothing was lost.
+- **News without paying a cent.** 100+ hand-picked landmark
+  environmental stories (Aral Sea, Chernobyl, Great Smog, Bhopal, the
+  saiga die-off, plastic, extinctions…) now live in
+  `data/environmental_news.json` — every link verified live, opens the
+  source in a new tab, categories filterable, order rotates daily.
+  Live headlines still appear on top when CURRENTS_API_KEY is set.
+- **Maps you can be proud of.** All three maps (AQI, wildfires,
+  hurricanes) switched to CARTO basemaps: English country/city names,
+  and a proper dark map in dark mode that follows the theme toggle live.
+- **Rankings redesigned.** Gold/silver/bronze medals for the top 3,
+  proportional value bars for every region and district, icon tabs.
+- **Wildfires & hurricanes upgraded.** Two new wildfire stat cards
+  (peak fire power, high-confidence count) and a "why we track this"
+  explainer card on both pages, in both languages.
+- **Faster, safer boot.** Demo accounts now use a cheap (still
+  unusable) password hash — seeding 600+ users no longer risks stalling
+  Render's worker boot for minutes.
+
+## Deploy
+
+```
+git add .
+git commit -m "v11: secret roster, 970 members, curated news, CARTO maps, rankings redesign"
+git push origin main
+```
+
+Then on Render: **Manual Deploy -> Deploy latest commit**. After boot,
+open `/admin/diagnostics` and confirm the Database panel says
+**PostgreSQL (Supabase) — survives redeploys: Yes**. If it says SQLite,
+add `DATABASE_URL` (Supabase Session-pooler URI) in Render ->
+Environment — that is the one thing that guarantees your users are
+never lost on a redeploy.
+
+---
+
 # Update v5 — WeatherAPI fix + Owner rank + profiles
 
 ## Step 1 — get your free WeatherAPI key (2 min, no card)
