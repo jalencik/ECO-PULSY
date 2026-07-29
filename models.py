@@ -14,9 +14,9 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(10), nullable=False, default="user")  # user | admin | owner
+    role = db.Column(db.String(10), nullable=False, default="user", index=True)  # user | admin | owner
     created_at = db.Column(
-        db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+        db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), index=True
     )
 
     # Optional profile details (all nullable so existing rows stay valid).
@@ -30,7 +30,7 @@ class User(UserMixin, db.Model):
     # only app.py's one-time _seed_fake_members() sets this. Admins never
     # see these rows at all; only the owner's panel folds them into the
     # combined total (see admin.py).
-    is_fake = db.Column(db.Boolean, nullable=False, default=False)
+    is_fake = db.Column(db.Boolean, nullable=False, default=False, index=True)
 
     @property
     def is_owner(self) -> bool:

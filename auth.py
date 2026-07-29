@@ -117,13 +117,17 @@ def register():
         user = User(name=name, email=email, birthdate=birthdate, photo=photo)
         user.set_password(password)
         # The configured owner always registers as owner, the configured
-        # queen always registers as queen; otherwise the very first
-        # account becomes an administrator.
+        # queen always registers as queen; otherwise the very first REAL
+        # account becomes an administrator. Seeded demo accounts (see
+        # _seed_fake_members in app.py) exist before anyone ever
+        # registers, so they must be excluded here - otherwise this
+        # branch never fires and the first genuine signup is silently
+        # left as a plain Member.
         if email == current_app.config.get("OWNER_EMAIL"):
             user.role = "owner"
         elif email == current_app.config.get("QUEEN_EMAIL"):
             user.role = "queen"
-        elif User.query.count() == 0:
+        elif User.query.filter_by(is_fake=False).count() == 0:
             user.role = "admin"
         db.session.add(user)
         db.session.commit()
