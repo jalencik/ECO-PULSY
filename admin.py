@@ -82,9 +82,25 @@ def panel():
     queries against the full table, never from loading every row into
     Python first, regardless of which page you're looking at.
     """
+    # Owner-only hidden leadership roster: every account that holds a real
+    # rank (owner, queen, administrators), with true role labels. It is
+    # rendered into the page but stays hidden until the owner types the
+    # secret word (see the reveal listener in ui.js); for anyone else the
+    # data is never queried and never leaves the server. Fetched up front
+    # for the owner because total_admins below is exactly this same set -
+    # reusing it avoids a second, redundant COUNT query on every load.
+    admin_roster = None
     if current_user.is_owner:
         base_query = User.query
-        total_admins = User.query.filter(User.role.in_(("admin", "owner", "queen"))).count()
+        roster_users = User.query.filter(
+            User.role.in_(("admin", "owner", "queen"))).all()
+        roster_users.sort(key=lambda u: (_ROSTER_ORDER.get(u.role, 3), u.name.lower()))
+        total_admins = len(roster_users)
+        admin_roster = [
+            {"user": u, "role_label": u.role_label,
+             "role_class": _ROLE_BADGE_CLASSES.get(u.role, "role-user")}
+            for u in roster_users
+        ]
     elif current_user.is_queen:
         base_query = User.query
         total_admins = ADMIN_VISIBLE_ADMIN_COUNT
@@ -99,6 +115,9 @@ def panel():
     page_users = (base_query.order_by(User.created_at.desc())
                   .offset((page - 1) * PAGE_SIZE).limit(PAGE_SIZE).all())
 
+    # Every row dict gets the same {user, role_label, role_class, badge}
+    # shape regardless of viewer tier, so the template never has to guess
+    # which keys are present.
     if current_user.is_owner:
         rows = [{"user": u, "role_label": u.role_label, "badge": u.is_admin,
                  "role_class": _ROLE_BADGE_CLASSES.get(u.role, "role-user")} for u in page_users]
@@ -106,34 +125,18 @@ def panel():
         rows = []
         for u in page_users:
             if u.is_owner:
-                rows.append({"user": u, "role_label": "Owner", "badge": True})
+                rows.append({"user": u, "role_label": "Owner", "badge": True, "role_class": "role-admin"})
             elif u.id == current_user.id:
-                rows.append({"user": u, "role_label": "Queen", "badge": True})
+                rows.append({"user": u, "role_label": "Queen", "badge": True, "role_class": "role-admin"})
             else:
-                rows.append({"user": u, "role_label": "Member", "badge": False})
+                rows.append({"user": u, "role_label": "Member", "badge": False, "role_class": "role-user"})
     else:
         rows = []
         for u in page_users:
             if u.id == current_user.id or u.is_owner or u.is_queen:
-                rows.append({"user": u, "role_label": "Administrator", "badge": True})
+                rows.append({"user": u, "role_label": "Administrator", "badge": True, "role_class": "role-admin"})
             else:
-                rows.append({"user": u, "role_label": "Member", "badge": False})
-
-    # Owner-only hidden leadership roster: every account that holds a
-    # real rank (owner, queen, administrators), with true role labels.
-    # It is rendered into the page but stays hidden until the owner
-    # types the secret word (see the reveal listener in ui.js); for
-    # anyone else the data is never queried and never leaves the server.
-    admin_roster = None
-    if current_user.is_owner:
-        roster_users = User.query.filter(
-            User.role.in_(("admin", "owner", "queen"))).all()
-        roster_users.sort(key=lambda u: (_ROSTER_ORDER.get(u.role, 3), u.name.lower()))
-        admin_roster = [
-            {"user": u, "role_label": u.role_label,
-             "role_class": _ROLE_BADGE_CLASSES.get(u.role, "role-user")}
-            for u in roster_users
-        ]
+                rows.append({"user": u, "role_label": "Member", "badge": False, "role_class": "role-user"})
 
     return render_template(
         "admin.html",
