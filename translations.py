@@ -30,9 +30,9 @@ TRANSLATIONS = {
         "nav.signup": "Create free account",
 
         # --- Hero ----------------------------------------------------------
-        "hero.eyebrow": "Air quality intelligence for Uzbekistan",
-        "hero.title": "Know what you breathe, in every region of the country.",
-        "hero.lede": "Live air quality and weather for all 14 regions of Uzbekistan - EPA health categories, six tracked pollutants and a multi-day outlook, in one clear dashboard.",
+        "hero.eyebrow": "An air quality project for Uzbekistan",
+        "hero.title": "Know what's in the air before you walk outside.",
+        "hero.lede": "Live air quality and weather for all 14 regions of Uzbekistan - EPA health categories, six pollutants tracked, multi-day outlook. I built it so checking the air is as normal as checking the weather.",
         "hero.get_started": "Get started",
         "hero.have_account": "I already have an account",
         "hero.fine_print": "Free · No credit card required",
@@ -47,13 +47,13 @@ TRANSLATIONS = {
         "stats.aqi": "AQI standard",
 
         # --- Features section --------------------------------------------------
-        "features.title": "Everything on one screen",
-        "features.sub": "Built for daily decisions: should the kids play outside, is it a good day to run, do you need a mask.",
-        "features.card1.title": "Full regional coverage",
-        "features.card1.body": "Every viloyat plus Tashkent City and Karakalpakstan - down to all 173 districts, each fetched by its exact coordinates.",
-        "features.card2.title": "Health-first air quality",
-        "features.card2.body": "PM2.5, PM10, NO₂, O₃, SO₂ and CO converted into official EPA categories with plain-language advice.",
-        "features.card3.title": "Weather that matters",
+        "features.title": "Everything in one place",
+        "features.sub": "Built for the decisions you actually make every day - like whether the kids should play outside, or you need a mask before heading out.",
+        "features.card1.title": "Every region, every district",
+        "features.card1.body": "Every viloyat plus Tashkent City and Karakalpakstan, down to all 173 districts - each one fetched by its own exact coordinates, not just guessed from the region.",
+        "features.card2.title": "Numbers you can actually use",
+        "features.card2.body": "PM2.5, PM10, NO₂, O₃, SO₂ and CO, converted into the official EPA categories with plain-language advice, not just a raw number that means nothing to you.",
+        "features.card3.title": "Weather, not just air",
         "features.card3.body": "Current conditions, 48-hour trends and a 3-day forecast, because weather is what moves pollution.",
 
         # --- How it works ------------------------------------------------------
@@ -68,10 +68,10 @@ TRANSLATIONS = {
         # --- Data honesty section --------------------------------------------------
         "data.title": "Honest about the data",
         "data.p1": "Measurements and forecasts come from",
-        "data.p2": ", which blends multiple national weather models and monitoring networks. No forecast on Earth is 100% accurate - so instead of pretending, we show you the official EPA uncertainty-aware categories that health agencies use.",
+        "data.p2": ", which blends multiple national weather models and monitoring networks. No forecast anywhere is 100% accurate, that's just how weather works. So I show the official EPA categories health agencies actually use, not a raw number pretending to be exact.",
 
         # --- CTA / footer ------------------------------------------------------
-        "cta.title": "Start monitoring the air you breathe",
+        "cta.title": "Start checking the air you breathe",
         "cta.button": "Create free account",
         "footer.data": "Data: WeatherAPI.com · AQI: US EPA standard",
         "footer.copyright": "© {year} EcoPulse",
@@ -391,7 +391,7 @@ TRANSLATIONS = {
         "admin.edit_user_title": "Edit user",
         "admin.owner_controls": "Owner controls",
         "admin.roster_title": "Leadership roster",
-        "admin.roster_sub": "All {count} privileged accounts with their true ranks - visible only to you. Type the secret word again to hide.",
+        "admin.roster_sub": "All {count} privileged accounts with their true ranks - visible only to you. Click Administrators again to hide it.",
         "edit.name_label": "Name",
         "edit.email_label": "Email",
         "edit.role_label": "Role",
@@ -448,9 +448,9 @@ TRANSLATIONS = {
         "nav.signup": "Bepul ro'yxatdan o'tish",
 
         # --- Hero ----------------------------------------------------------
-        "hero.eyebrow": "O'zbekiston uchun havo sifati tizimi",
-        "hero.title": "Mamlakatning har bir mintaqasida nima bilan nafas olayotganingizni bilib oling.",
-        "hero.lede": "O'zbekistonning barcha 14 viloyati uchun jonli havo sifati va ob-havo - EPA sog'liq toifalari, kuzatiluvchi oltita ifloslantiruvchi modda va bir necha kunlik prognoz, bitta aniq boshqaruv panelida.",
+        "hero.eyebrow": "O'zbekiston uchun havo sifati loyihasi",
+        "hero.title": "Tashqariga chiqishdan oldin havoda nima borligini bilib oling.",
+        "hero.lede": "O'zbekistonning barcha 14 viloyati uchun jonli havo sifati va ob-havo - EPA sog'liq toifalari, kuzatiluvchi oltita ifloslantiruvchi modda va bir necha kunlik prognoz. Buni havoni tekshirish ob-havoni tekshirish kabi oddiy bo'lishi uchun yaratdim.",
         "hero.get_started": "Boshlash",
         "hero.have_account": "Mening hisobim bor",
         "hero.fine_print": "Bepul · Bank kartasi talab qilinmaydi",
@@ -465,13 +465,13 @@ TRANSLATIONS = {
         "stats.aqi": "AQI standarti",
 
         # --- Features section --------------------------------------------------
-        "features.title": "Barchasi bitta ekranda",
-        "features.sub": "Kundalik qarorlar uchun: bolalar tashqarida o'ynasa bo'ladimi, yugurish uchun yaxshi kunmi, niqob kerakmi.",
-        "features.card1.title": "To'liq mintaqaviy qamrov",
-        "features.card1.body": "Har bir viloyat, shuningdek Toshkent shahri va Qoraqalpog'iston - barcha 173 tumangacha, har biri aniq koordinatalari bo'yicha olinadi.",
-        "features.card2.title": "Sog'liqni birinchi o'ringa qo'yuvchi havo sifati",
-        "features.card2.body": "PM2.5, PM10, NO₂, O₃, SO₂ va CO rasmiy EPA toifalariga va tushunarli tavsiyalarga aylantiriladi.",
-        "features.card3.title": "Muhim ob-havo ma'lumotlari",
+        "features.title": "Barchasi bir joyda",
+        "features.sub": "Har kuni qabul qiladigan qarorlaringiz uchun - masalan, bolalar tashqarida o'ynasa bo'ladimi yoki tashqariga chiqishdan oldin niqob kerakmi.",
+        "features.card1.title": "Har bir viloyat, har bir tuman",
+        "features.card1.body": "Har bir viloyat, shuningdek Toshkent shahri va Qoraqalpog'iston - barcha 173 tumangacha, har biri mintaqadan taxmin qilinmay, o'zining aniq koordinatalari bo'yicha olinadi.",
+        "features.card2.title": "Sizga aslida foydali raqamlar",
+        "features.card2.body": "PM2.5, PM10, NO₂, O₃, SO₂ va CO sizga hech narsani anglatmaydigan xom raqam emas, balki rasmiy EPA toifalari va tushunarli tavsiyalarga aylantiriladi.",
+        "features.card3.title": "Ob-havo, nafaqat havo",
         "features.card3.body": "Joriy holat, 48 soatlik tendensiyalar va 3 kunlik prognoz - chunki ob-havo ifloslanishni harakatga keltiradi.",
 
         # --- How it works ------------------------------------------------------
@@ -486,10 +486,10 @@ TRANSLATIONS = {
         # --- Data honesty section --------------------------------------------------
         "data.title": "Ma'lumotlar haqida ochiq va halol",
         "data.p1": "O'lchovlar va prognozlar",
-        "data.p2": " manbasidan olinadi, u bir nechta milliy ob-havo modellari va kuzatuv tarmoqlarini birlashtiradi. Yer yuzida 100% aniq prognoz yo'q - shuning uchun soxta aniqlik ko'rsatish o'rniga sog'liqni saqlash idoralari foydalanadigan rasmiy EPA noaniqlikni hisobga oluvchi toifalarni ko'rsatamiz.",
+        "data.p2": " manbasidan olinadi, u bir nechta milliy ob-havo modellari va kuzatuv tarmoqlarini birlashtiradi. Yer yuzida 100% aniq prognoz yo'q, bu ob-havoning tabiati shunday. Shuning uchun o'zini aniq qilib ko'rsatadigan xom raqam o'rniga, sog'liqni saqlash idoralari haqiqatda foydalanadigan rasmiy EPA toifalarini ko'rsataman.",
 
         # --- CTA / footer ------------------------------------------------------
-        "cta.title": "Nafas olayotgan havoingizni kuzatishni boshlang",
+        "cta.title": "Nafas olayotgan havoingizni tekshirishni boshlang",
         "cta.button": "Bepul ro'yxatdan o'tish",
         "footer.data": "Ma'lumot: WeatherAPI.com · AQI: AQSh EPA standarti",
         "footer.copyright": "© {year} EcoPulse",
@@ -808,7 +808,7 @@ TRANSLATIONS = {
         "admin.edit_user_title": "Foydalanuvchini tahrirlash",
         "admin.owner_controls": "Egasi nazorati",
         "admin.roster_title": "Rahbariyat ro'yxati",
-        "admin.roster_sub": "Barcha {count} imtiyozli hisob haqiqiy darajalari bilan - faqat sizga ko'rinadi. Yashirish uchun maxfiy so'zni qayta tering.",
+        "admin.roster_sub": "Barcha {count} imtiyozli hisob haqiqiy darajalari bilan - faqat sizga ko'rinadi. Yashirish uchun \"Administratorlar\"ni yana bir bor bosing.",
         "edit.name_label": "Ism",
         "edit.email_label": "Elektron pochta",
         "edit.role_label": "Rol",
