@@ -62,6 +62,7 @@ def create_app(config_class=Config):
     with app.app_context():
         db.create_all()
         _ensure_user_columns()   # add new profile columns to an existing table
+        _ensure_user_indexes()   # add lookup indexes to an existing table
         _promote_owner(app)      # make OWNER_EMAIL the owner
         _promote_queen(app)      # make QUEEN_EMAIL the queen
         try:
@@ -258,6 +259,30 @@ def _ensure_user_columns():
             db.session.commit()
         except Exception:
             db.session.rollback()  # column already present — fine
+
+
+# Columns the admin panel filters or sorts on every single load (role,
+# is_fake) or paginates by (created_at). db.create_all() never adds
+# indexes to a table that already exists, so - same reasoning as
+# _ensure_user_columns above - a plain `index=True` in models.py would
+# silently do nothing on an already-seeded database. CREATE INDEX IF NOT
+# EXISTS is valid on both SQLite and PostgreSQL, so no dialect branch
+# is needed here.
+_NEW_USER_INDEXES = {
+    "ix_users_role": "role",
+    "ix_users_is_fake": "is_fake",
+    "ix_users_created_at": "created_at",
+}
+
+
+def _ensure_user_indexes():
+    for index_name, column in _NEW_USER_INDEXES.items():
+        try:
+            db.session.execute(text(
+                f"CREATE INDEX IF NOT EXISTS {index_name} ON users ({column})"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()  # index already present, or table not ready yet
 
 
 def _promote_owner(app):
