@@ -59,31 +59,23 @@
     img.classList.add("news-thumb-empty");
   }, true);
 
-  // --- Owner-only secret reveal (admin panel) --------------------------------
-  // The leadership roster (#admin-roster) is only ever rendered into the
-  // page for the owner (server-side gate in admin.py), hidden by default.
-  // Typing the secret word anywhere on the page (not inside an input)
-  // toggles it. For every other visitor this whole block is inert -
-  // the element simply doesn't exist in their DOM.
-  var secretSection = document.getElementById("admin-roster");
-  if (secretSection) {
-    var SECRET_WORD = "administor";
-    var typedBuffer = "";
-    document.addEventListener("keydown", function (e) {
-      var target = e.target;
-      var tag = target && target.tagName ? target.tagName.toLowerCase() : "";
-      if (tag === "input" || tag === "textarea" || tag === "select" || (target && target.isContentEditable)) return;
-      if (!e.key || e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return;
-      typedBuffer = (typedBuffer + e.key.toLowerCase()).slice(-SECRET_WORD.length);
-      if (typedBuffer === SECRET_WORD) {
-        typedBuffer = "";
-        secretSection.hidden = !secretSection.hidden;
-        if (!secretSection.hidden) {
-          secretSection.classList.remove("roster-reveal");
-          void secretSection.offsetWidth; // restart the reveal animation
-          secretSection.classList.add("roster-reveal");
-          secretSection.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
+  // --- Owner-only administrators roster toggle (admin panel) -----------------
+  // The leadership roster (#admin-roster) and its toggle button are only
+  // ever rendered into the page for the owner (server-side gate in
+  // admin.py), hidden by default. For every other visitor neither
+  // element exists in their DOM, so this whole block is inert.
+  var rosterToggle = document.getElementById("admin-roster-toggle");
+  var rosterSection = document.getElementById("admin-roster");
+  if (rosterToggle && rosterSection) {
+    rosterToggle.addEventListener("click", function () {
+      var opening = rosterSection.hidden;
+      rosterSection.hidden = !opening;
+      rosterToggle.setAttribute("aria-expanded", opening ? "true" : "false");
+      if (opening) {
+        rosterSection.classList.remove("roster-reveal");
+        void rosterSection.offsetWidth; // restart the reveal animation
+        rosterSection.classList.add("roster-reveal");
+        rosterSection.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     });
   }
