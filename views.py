@@ -22,6 +22,12 @@ from translations import DEFAULT_LANG, SUPPORTED_LANGS
 
 views_bp = Blueprint("views", __name__)
 
+# Trust badge below the hero CTA on the landing page. A fixed headline
+# figure rather than a live count - simple, honest framing that never
+# needs a database query on the one page that has to load instantly for
+# a logged-out visitor.
+LANDING_TRUST_COUNT = 1000
+
 
 @views_bp.route("/")
 def index():
@@ -29,16 +35,7 @@ def index():
     if current_user.is_authenticated:
         return redirect(url_for("views.dashboard"))
 
-    # Trust badge below the hero CTA. Rounded DOWN to the nearest 50 so it
-    # always reads as a clean, honest number and never overstates the
-    # live count as it grows. Never blocks the landing page from loading.
-    from models import User
-    try:
-        trust_count = (User.query.count() // 50) * 50
-    except Exception:
-        trust_count = 0
-
-    return render_template("index.html", trust_count=trust_count)
+    return render_template("index.html", trust_count=LANDING_TRUST_COUNT)
 
 
 @views_bp.route("/set-language/<lang>")
