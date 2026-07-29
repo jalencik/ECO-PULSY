@@ -62,6 +62,7 @@ def create_app(config_class=Config):
     with app.app_context():
         db.create_all()
         _ensure_user_columns()   # add new profile columns to an existing table
+        _ensure_user_indexes()   # add lookup indexes to an existing table
         _promote_owner(app)      # make OWNER_EMAIL the owner
         _promote_queen(app)      # make QUEEN_EMAIL the queen
         try:
@@ -70,7 +71,7 @@ def create_app(config_class=Config):
             # Never block boot on seeding — the CLI command can retry it.
             db.session.rollback()
         try:
-            _seed_fake_members()
+            _seed_demo_members()
         except Exception:
             db.session.rollback()
 
@@ -235,15 +236,40 @@ _NEW_USER_COLUMNS = {
     "latitude": "DOUBLE PRECISION",
     "longitude": "DOUBLE PRECISION",
     "location_label": "VARCHAR(80)",
-    # Marks the seeded demo accounts (see _seed_fake_members). The
+    # Marks the seeded demo accounts (see _seed_demo_members). The
     # NOT NULL DEFAULT FALSE backfills every existing real row to False
     # in the same statement, so this is never NULL for anyone.
-    "is_fake": "BOOLEAN NOT NULL DEFAULT FALSE",
+    "is_seed_data": "BOOLEAN NOT NULL DEFAULT FALSE",
+}
+
+# Indexes for columns the admin panel filters or sorts on every single
+# load (role for the admin/owner/queen counts and roster; is_seed_data to
+# split real accounts from seed data) or paginates by (created_at).
+# Declared on the model too, but db.create_all() never retrofits indexes
+# onto a table that already existed, so an already-deployed database
+# needs this one-time DDL. CREATE INDEX IF NOT EXISTS is valid on both
+# SQLite and PostgreSQL, so no dialect branch is needed here.
+_NEW_USER_INDEXES = {
+    "ix_users_role": "role",
+    "ix_users_is_seed_data": "is_seed_data",
+    "ix_users_created_at": "created_at",
 }
 
 
 def _ensure_user_columns():
     dialect = db.engine.dialect.name
+
+    # One-time rename from the old "is_fake" column name. Both SQLite
+    # (3.25+) and PostgreSQL support RENAME COLUMN directly; a database
+    # that never had "is_fake" (a fresh install, or one already renamed)
+    # simply has nothing to rename, and the error is swallowed exactly
+    # like every other "already applied" migration in this function.
+    try:
+        db.session.execute(text("ALTER TABLE users RENAME COLUMN is_fake TO is_seed_data"))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
     for name, col_type in _NEW_USER_COLUMNS.items():
         col_type_sql = col_type
         if dialect == "sqlite" and col_type == "DOUBLE PRECISION":
@@ -258,6 +284,16 @@ def _ensure_user_columns():
             db.session.commit()
         except Exception:
             db.session.rollback()  # column already present — fine
+
+
+def _ensure_user_indexes():
+    for index_name, column in _NEW_USER_INDEXES.items():
+        try:
+            db.session.execute(text(
+                f"CREATE INDEX IF NOT EXISTS {index_name} ON users ({column})"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()  # index already present, or table not ready yet
 
 
 def _promote_owner(app):
@@ -336,56 +372,57 @@ def _seed_locations():
     return count
 
 
-def _seed_fake_members():
+def _seed_demo_members():
     """Top the users table up to TARGET_TOTAL_USERS with clearly-marked
-    demo member accounts, resyncing them whenever the generator in
-    services/fake_members.py changes.
+    seed data accounts, resyncing them whenever the generator in
+    services/seed_members.py changes.
 
     These are NOT real people:
-    - role is always "user" and is_fake is always True
+    - role is always "user" and is_seed_data is always True
     - the password is a random value generated and discarded on the
       spot, so the account can never be used to sign in
-    - admin.py filters is_fake accounts out entirely for plain admins
-      (real count and rows only); the owner and the Queen fold them
-      into the combined total instead.
+    - admin.py filters is_seed_data accounts out entirely for plain
+      admins (real count and rows only); the owner and the Queen fold
+      them into the combined total instead.
 
-    The batch size is computed, not fixed: real (is_fake=False) rows
-    are counted first and only the gap up to TARGET_TOTAL_USERS is
+    The batch size is computed, not fixed: real (is_seed_data=False)
+    rows are counted first and only the gap up to TARGET_TOTAL_USERS is
     generated, so the combined total always lands on the same round
     number no matter how many real people have registered.
 
     A one-row marker in the snapshots table records which
-    fake_members.DATASET_VERSION is currently live. On boot, if that
-    doesn't match the version in code, every is_fake row is deleted and
-    regenerated from scratch - this is how a generator change (bigger,
-    more diverse name/email pools) actually reaches an already-seeded
-    production database instead of being silently skipped forever.
-    Real user rows (is_fake=False) are never touched or deleted.
+    seed_members.DATASET_VERSION is currently live. On boot, if that
+    doesn't match the version in code, every is_seed_data row is deleted
+    and regenerated from scratch - this is how a generator change
+    (bigger, more diverse name/email pools) actually reaches an
+    already-seeded production database instead of being silently
+    skipped forever. Real user rows (is_seed_data=False) are never
+    touched or deleted.
     """
     from models import Snapshot, User
-    from services.fake_members import (DATASET_VERSION, TARGET_TOTAL_USERS,
-                                       generate_fake_members)
+    from services.seed_members import (DATASET_VERSION, TARGET_TOTAL_USERS,
+                                       generate_seed_members)
 
-    marker = db.session.get(Snapshot, "fake_members_version")
+    marker = db.session.get(Snapshot, "seed_members_version")
     up_to_date = marker is not None and marker.payload.get("version") == DATASET_VERSION
-    if up_to_date and User.query.filter_by(is_fake=True).first() is not None:
+    if up_to_date and User.query.filter_by(is_seed_data=True).first() is not None:
         return 0
 
     # Wipe any previous batch (old repetitive names, older seed, etc.)
     # before regenerating so this stays a clean resync, not an add-on.
-    User.query.filter_by(is_fake=True).delete(synchronize_session=False)
+    User.query.filter_by(is_seed_data=True).delete(synchronize_session=False)
 
-    real_count = User.query.filter_by(is_fake=False).count()
+    real_count = User.query.filter_by(is_seed_data=False).count()
     needed = max(0, TARGET_TOTAL_USERS - real_count)
 
     existing_emails = {row[0] for row in db.session.query(User.email).all()}
     count = 0
-    for person in generate_fake_members(needed):
+    for person in generate_seed_members(needed):
         if person["email"] in existing_emails:
             continue
         user = User(
             name=person["name"], email=person["email"],
-            birthdate=person["birthdate"], role="user", is_fake=True,
+            birthdate=person["birthdate"], role="user", is_seed_data=True,
             created_at=person["created_at"],
         )
         # A random password nobody knows, hashed with a deliberately cheap
@@ -401,7 +438,7 @@ def _seed_fake_members():
         count += 1
 
     if marker is None:
-        db.session.add(Snapshot(key="fake_members_version", payload={"version": DATASET_VERSION}))
+        db.session.add(Snapshot(key="seed_members_version", payload={"version": DATASET_VERSION}))
     else:
         marker.payload = {"version": DATASET_VERSION}
 
@@ -459,10 +496,10 @@ def _register_cli(app):
         count = _seed_locations()
         click.echo(f"Inserted {count} new locations." if count else "Locations already up to date.")
 
-    @app.cli.command("seed-fake-members")
-    def seed_fake_members():
+    @app.cli.command("seed-demo-members")
+    def seed_demo_members():
         """Insert or resync the demo member accounts (top-up to target total)."""
-        count = _seed_fake_members()
+        count = _seed_demo_members()
         click.echo(f"Inserted {count} demo members." if count else "Demo members already up to date.")
 
 

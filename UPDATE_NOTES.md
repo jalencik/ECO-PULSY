@@ -201,8 +201,8 @@ Push: `git add .` -> `git commit -m "v7: EN/UZ language, 300 demo members, mobil
   account change needed. Translations live in one place: `translations.py`.
   The admin diagnostics page stays English-only (it's an internal ops
   tool); everything a regular visitor sees is bilingual.
-- **300 demo member accounts** (`services/fake_members.py`) — clearly
-  fake Uzbek names/emails, seeded once automatically on the next deploy.
+- **300 demo member accounts** (`services/seed_members.py`) — clearly
+  synthetic Uzbek names/emails, seeded once automatically on the next deploy.
   Role is always "Member," and they can never log in (random, discarded
   password). Only **your** owner panel folds them into the combined
   "Total users" count, each tagged with a small "Demo" pill only you can

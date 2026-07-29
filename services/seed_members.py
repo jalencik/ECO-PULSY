@@ -1,15 +1,15 @@
-"""Generates the demo ("fake") member identities seeded by app.py.
+"""Generates the seed data for the demo member identities loaded by app.py.
 
 Pure data generation only - no Flask/DB imports here on purpose, so it
 stays trivially testable and side-effect free. app.py's
-_seed_fake_members() is the only caller and does all the DB work.
+_seed_demo_members() is the only caller and does all the DB work.
 
 The seeder tops the platform up to TARGET_TOTAL_USERS accounts: it
-counts the real (is_fake=False) rows first and only generates enough
-demo identities to fill the gap, so the combined total the owner and
-the Queen see always lands on the same round number while real users
-are never duplicated or displaced. Plain admins never see these rows
-at all (see admin.py).
+counts the real (is_seed_data=False) rows first and only generates
+enough seed identities to fill the gap, so the combined total the owner
+and the Queen see always lands on the same round number while real
+users are never duplicated or displaced. Plain admins never see these
+rows at all (see admin.py).
 
 Identities are drawn from three name pools reflecting who actually
 signs up on an Uzbek site: mostly Uzbek names, a meaningful minority of
@@ -155,7 +155,7 @@ def _local_part(rng, first, surname, birth_year):
     return rng.choice(templates)
 
 
-def generate_fake_members(n, seed=SEED):
+def generate_seed_members(n, seed=SEED):
     """Return a list of n dicts: name, email, birthdate (YYYY-MM-DD), created_at (aware datetime).
 
     Every full name and every email in the batch is unique.
